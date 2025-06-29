@@ -1,18 +1,21 @@
 // cbt-backend/config/db.js
 const mongoose = require('mongoose');
+// If you are using dotenv for local development, make sure it's required here
+// require('dotenv').config(); 
 
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/city_db', {
-      // These options are often recommended for new Mongoose versions, but check Mongoose docs for your version.
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
-      // useCreateIndex: true, // No longer supported in Mongoose 6+
-      // useFindAndModify: false, // No longer supported in Mongoose 6+
-    });
+    // Ensure process.env.MONGO_URI is defined. Remove the hardcoded fallback.
+    if (!process.env.MONGO_URI) {
+      console.error("Error: MONGO_URI environment variable is not defined.");
+      process.exit(1); // Exit if the crucial URI is missing
+    }
+
+    const conn = await mongoose.connect(process.env.MONGO_URI); // Connect using only the environment variable
+
     console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error(`Error: ${error.message}`);
+    console.error(`Error connecting to MongoDB: ${error.message}`);
     process.exit(1); // Exit process with failure
   }
 };
