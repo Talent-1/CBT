@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+.yarn/
+/logs
+*.log
+
+# Environment Variables
+.env
+.env.local
+.env.*.local
+
+# Build/Dist directories (if you happen to transpile your backend, though less common than frontend)
+dist/
+build/
+coverage/
+
+# IDE and OS specific files
+.vscode/        # VS Code specific settings (unless explicitly shared)
+.idea/          # IntelliJ IDEA specific files
+.DS_Store       # macOS generated files
+Thumbs.db       # Windows generated files
+
+# Uploaded Files (if your backend handles file uploads to local storage)
+/uploads/
+/public/uploads/
+
+# Database related files (if any are generated locally, e.g., sqlite or local mongo data)
+*.sqlite
+*.sqlite-journal
+*.db
+/data/db/ # Default MongoDB local data directory

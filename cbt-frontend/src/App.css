@@ -1,0 +1,324 @@
+/* cbt-frontend/src/App.css */
+
+/* Global App Container and Root Styling (from your previous App.css and index.css for consistency) */
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Make root fill viewport height */
+  width: 100%;
+  max-width: none; /* Allow root to take full width as per index.css setup */
+  margin: 0;
+  padding: 0; /* Remove root padding to allow header/footer to go edge-to-edge */
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay for readability */
+}
+
+.app-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100vh; /* Ensure it also fills height */
+}
+
+
+/* --- Header Styling --- */
+.app-header {
+  background-color: #005600; /* DEEP GREEN BACKGROUND as requested */
+  padding: 10px 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  color: white;
+  width: 100%;
+  /* Make header itself a flex container to center its content */
+  display: flex;
+  justify-content: center; /* Centers the header-content horizontally */
+  align-items: center;
+  min-height: 70px; /* Give it some minimum height */
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between; /* Pushes logo/title to left, nav to right */
+  align-items: center;
+  max-width: 1200px; /* Constrain content width for larger screens */
+  width: 100%; /* Ensure it takes full width within app-header */
+  margin: 0; /* Remove auto margin as app-header centers it */
+}
+
+.logo-link {
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+  color: white;
+  font-size: 1.5em;
+  font-weight: bold;
+  white-space: nowrap; /* Prevent school name from wrapping */
+}
+
+.school-logo {
+  height: 40px; /* Adjust as needed */
+  margin-right: 10px;
+}
+
+.header-content h1 {
+  margin: 0; /* Remove default margin */
+  font-size: 1.8em; /* Adjust font size */
+  white-space: nowrap; /* Prevent school name from wrapping */
+}
+
+.main-nav {
+  display: flex; /* KEY FIX: Makes its children flow horizontally */
+  align-items: center; /* Vertically centers menu items */
+  gap: 25px; /* Adds consistent spacing between menu items */
+  margin-left: auto; /* Pushes the nav block to the far right within header-content */
+  font-size: 1.1em; /* Adjust font size for menu items */
+  flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
+  justify-content: flex-end; /* Align items to the right if they wrap */
+}
+
+.welcome-message {
+  color: #add8e6; /* A lighter color for welcome message for better contrast */
+  white-space: nowrap; /* Prevent the welcome message from wrapping */
+  font-size: 0.9em; /* Smaller font for welcome message */
+}
+
+.main-nav a,
+.main-nav button {
+  color: white;
+  text-decoration: none;
+  padding: 8px 15px;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+  background-color: transparent;
+  border: none;
+  font-size: 1em;
+  cursor: pointer;
+  white-space: nowrap; /* Prevent links/buttons from wrapping their text */
+}
+
+.main-nav a:hover,
+.main-nav button:hover {
+  background-color: #007bff; /* Highlight on hover */
+}
+
+.logout-button {
+  background-color: #dc3545; /* Red logout button */
+}
+
+.logout-button:hover {
+  background-color: #c82333;
+}
+
+
+/* --- Main Content Area --- */
+.main-content {
+  flex-grow: 1; /* Allows main content to take up available space */
+  padding: 40px 20px; /* Add padding top/bottom */
+  max-width: 800px; /* Re-apply max-width for forms/pages */
+  margin: 20px auto; /* Center the content area */
+  background-color: rgba(45, 45, 45, 0.9); /* Slightly transparent dark background for content */
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+}
+
+
+/* --- Footer Styling --- */
+.app-footer {
+  background-color: #1a1a1a;
+  color: white;
+  padding: 20px;
+  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
+  width: 100%;
+  margin-top: auto; /* Pushes footer to the bottom */
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
+  justify-content: space-around;
+  align-items: flex-start;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.footer-section {
+  flex: 1; /* Distribute space */
+  min-width: 250px; /* Minimum width before wrapping */
+  margin: 10px;
+}
+
+.footer-section h3 {
+  color: #007bff; /* Highlight footer headings */
+  margin-bottom: 10px;
+}
+
+.footer-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-section ul li {
+  margin-bottom: 5px;
+}
+
+.footer-section a {
+  color: #bbb;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-section a:hover {
+  color: #007bff;
+}
+
+.footer-section p {
+  margin-bottom: 5px;
+  color: #bbb;
+  font-size: 0.9em;
+}
+
+.company-logo {
+  height: 30px; /* Adjust as needed */
+  margin-top: 10px;
+}
+
+/* General Form and Input Styles */
+input,
+button,
+textarea,
+select {
+  padding: 10px;
+  margin: 5px 0; /* Adjust margin for consistency */
+  border-radius: 5px;
+  border: 1px solid #555;
+  background-color: #444;
+  color: white;
+  width: calc(100% - 20px); /* Adjust width to fit container with padding */
+  box-sizing: border-box; /* Include padding and border in element's total width */
+}
+
+button {
+  cursor: pointer;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #555;
+  border-radius: 8px;
+  background-color: #2d2d2d;
+}
+
+label {
+  align-self: flex-start;
+  color: #ddd;
+}
+
+h1,
+h2,
+h3 {
+  color: #eee;
+}
+
+p {
+  color: #bbb;
+}
+
+.error-message {
+  color: #ff4d4d;
+  font-size: 0.9em;
+  margin-top: -5px;
+  margin-bottom: 5px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+  .main-nav {
+    margin-top: 10px;
+    width: 100%;
+    justify-content: center; }
+  
+    .profile-picture-section {
+    background-color: #3a3a3a;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #555;
+    text-align: center; /* Center content within this section */
+}
+
+.profile-picture-section h3 {
+    margin-top: 0;
+    color: #eee;
+}
+
+.profile-picture-preview {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%; /* Makes it round */
+    object-fit: cover; /* Ensures image covers the area */
+    border: 3px solid #007bff; /* A nice border color */
+    margin-bottom: 15px;
+    display: block; /* Centers the image */
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.profile-picture-placeholder {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background-color: #555;
+    color: #bbb;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 0.9em;
+    text-align: center;
+    border: 3px dashed #007bff;
+    margin-bottom: 15px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.upload-label {
+    display: inline-block; /* Make it look like a button */
+    background-color: #007bff;
+    color: white;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.upload-label:hover {
+    background-color: #0056b3;
+}
+
+/* Style for the actual upload button */
+.profile-picture-section .dashboard-button {
+    margin-top: 15px; /* Space between select label and upload button */
+}
+
+.upload-message {
+    color: #28a745; /* Green for success */
+    margin-top: 10px;
+    font-weight: bold;
+}

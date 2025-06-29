@@ -1,0 +1,134 @@
+/* cbt-frontend/src/pages/InvoicePage.css */
+
+.invoice-page-container {
+    max-width: 850px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    font-family: 'Times New Roman', serif; /* More formal font for invoice */
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.printable-content {
+    width: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+    /* Styles specifically for the content that will be printed */
+}
+
+.invoice-preview {
+    text-align: left;
+    line-height: 1.6;
+}
+
+.invoice-preview h2 {
+    text-align: center;
+    color: #0056b3;
+    margin-bottom: 30px;
+    font-size: 2em;
+    text-transform: uppercase;
+    border-bottom: 3px double #0056b3;
+    padding-bottom: 10px;
+}
+
+.invoice-preview p {
+    margin-bottom: 10px;
+    font-size: 1.1em;
+}
+
+.invoice-preview p strong {
+    color: #003366;
+    display: inline-block; /* Helps align key-value pairs */
+    min-width: 150px; /* Adjust as needed for alignment */
+}
+
+.invoice-preview em {
+    display: block;
+    margin-top: 20px;
+    font-style: italic;
+    color: #555;
+    text-align: center;
+    font-size: 0.95em;
+}
+
+.invoice-actions {
+    margin-top: 30px;
+    display: flex;
+    gap: 20px;
+}
+
+.invoice-actions button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out, transform 0.1s ease;
+}
+
+.print-button {
+    background-color: #28a745; /* Green for print */
+}
+
+.print-button:hover {
+    background-color: #218838;
+    transform: translateY(-1px);
+}
+
+.new-invoice-button {
+    background-color: #007bff; /* Blue for new invoice */
+}
+
+.new-invoice-button:hover {
+    background-color: #0056b3;
+    transform: translateY(-1px);
+}
+
+/* Media query for print styles (already handled by useReactToPrint pageStyle, but good to have) */
+@media print {
+    .no-print {
+        display: none !important; /* Hide elements with this class when printing */
+    }
+    .invoice-page-container {
+        box-shadow: none !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        border-radius: 0 !important;
+    }
+    .printable-content {
+        padding: 0 !important; /* Remove padding for print */
+    }
+}
+
+/* Responsive adjustments for screens */
+@media (max-width: 768px) {
+    .invoice-page-container {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .invoice-preview h2 {
+        font-size: 1.6em;
+    }
+    .invoice-preview p {
+        font-size: 1em;
+    }
+    .invoice-preview p strong {
+        min-width: 120px;
+    }
+    .invoice-actions {
+        flex-direction: column;
+        gap: 10px;
+        width: 100%;
+    }
+    .invoice-actions button {
+        width: 100%;
+    }
+}

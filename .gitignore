@@ -1,0 +1,51 @@
+# Git-specific ignore
+.git/                  # Ignore the Git internal folder itself (though it's usually already handled)
+.gitattributes
+.gitmodules
+
+# Node.js specific ignores (for any top-level node_modules or logs)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm/
+.yarn/
+/logs
+*.log
+
+# Environment variables (crucial for security)
+.env                   # General .env file, if any at root
+.env.local
+.env.*.local
+
+# IDE and OS specific files
+.vscode/               # VS Code specific settings (unless explicitly shared and only necessary configs are in there)
+.idea/                 # IntelliJ IDEA specific files
+.DS_Store              # macOS generated files
+Thumbs.db              # Windows generated files
+
+# Backend specific ignores (if not already handled by cbt-backend/.gitignore)
+# If cbt-backend/ has its own .gitignore, these might be redundant but safe to include
+/cbt-backend/node_modules/
+/cbt-backend/.env
+/cbt-backend/.env.local
+/cbt-backend/.env.*.local
+/cbt-backend/uploads/
+/cbt-backend/public/uploads/
+/cbt-backend/data/db/ # Default MongoDB local data directory
+/cbt-backend/*.sqlite
+/cbt-backend/*.sqlite-journal
+/cbt-backend/*.db
+
+# Frontend specific ignores (if not already handled by cbt-frontend/.gitignore)
+# If cbt-frontend/ has its own .gitignore, these might be redundant but safe to include
+/cbt-frontend/node_modules/
+/cbt-frontend/dist/           # Vital for frontend builds
+/cbt-frontend/build/          # Alternative build folder name
+/cbt-frontend/.env
+/cbt-frontend/.env.local
+/cbt-frontend/.env.*.local
+
+# Test/Coverage reports
+coverage/
