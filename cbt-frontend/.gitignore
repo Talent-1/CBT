@@ -1,24 +1,55 @@
-# Logs
-logs
+# Git-specific ignore (standard)
+.git/
+.gitattributes
+.gitmodules
+
+# Node.js specific ignores (common to all Node.js projects/sub-projects)
+node_modules/
+
+# Logs and debugging files
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+.pnpm-debug.log*
+lerna-debug.log* # Added from your input
 
-node_modules
-dist
-dist-ssr
-*.local
+# Build output directories (for both frontend and backend if applicable)
+dist/
+dist-ssr/ # Added from your input (common for Vite SSR)
+build/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+# Environment variables (crucial for security)
+# General .env files, typically for local development, that should NEVER be committed.
+.env
+.env.local
+.env.development # Explicitly ignore the .env.development file
+.env.*.local     # Catches .env.staging.local, etc.
+# *.local (From your input - this is too broad and could ignore necessary files,
+# so it's kept specific to environment files like .env.local, .env.development, etc.
+# If you have other specific *.local files you want to ignore, add them individually.)
+
+# IDE and OS specific files
+.vscode/
+!.vscode/extensions.json # Added from your input, ensures extensions.json is NOT ignored
+.idea/ # IntelliJ IDEA specific files
+.DS_Store # macOS generated files
+Thumbs.db # Windows generated files
+*.suo     # VS specific project files (added from your input)
+*.ntvs* # VS specific project files (added from your input)
+*.njsproj # VS specific project files (added from your input)
+*.sln     # Visual Studio solution files (added from your input)
+*.sw?     # Vim swap files (added from your input)
+
+# Backend specific ignores (if they aren't handled by a separate .gitignore inside cbt-backend/)
+# If cbt-backend/ has its own .gitignore, these might be redundant but safe as a fallback.
+/cbt-backend/uploads/
+/cbt-backend/public/uploads/
+/cbt-backend/data/db/ # Default MongoDB local data directory (if any)
+/cbt-backend/*.sqlite
+/cbt-backend/*.sqlite-journal
+/cbt-backend/*.db
+
+# Test/Coverage reports
+coverage/
