@@ -20,55 +20,80 @@ const publicRoutes = require('./routes/publicRoute');
 const subjectRoutes = require('./routes/subjectRoutes');
 const questionRoutes = require('./routes/questionRoutes');
 
-// --- NEW LINE: IMPORT PAYMENT ROUTES ---
+// Import payment routes
 const paymentRoutes = require('./routes/paymentRoutes');
-// --- END NEW LINE ---
 
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 
+// Connect to MongoDB
 connectDB();
 
+// Configure Cloudinary for image uploads
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
+// Middleware to parse JSON request bodies
 app.use(express.json());
+
+// CORS Configuration
+// Define the list of allowed origins (frontend URLs)
+const allowedOrigins = [
+    'http://localhost:5173',               // For local frontend development
+    'https://www.cityschoolsexams.com',    // Your deployed frontend with www
+    'https://cityschoolsexams.com',        // Your deployed frontend without www
+    'https://city-app-y6im.onrender.com',  // Your frontend deployed on Render (if different from custom domain)
+];
+
 app.use(cors({
-    origin: 'http://localhost:5173',
-    credentials: true,
-    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    origin: function (origin, callback) {
+        // Allow requests with no origin (e.g., Postman, curl, same-origin requests in some cases)
+        // OR if the origin is found in the allowedOrigins list
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true); // Allow the request
+        } else {
+            // Block the request and send a CORS error
+            callback(new Error('Not allowed by CORS'), false);
+        }
+    },
+    credentials: true, // Allow sending cookies/authorization headers with the request
+    methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], // Allowed HTTP methods
+    allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
 }));
 
+// Basic route for root URL to confirm API is running
 app.get('/', (req, res) => {
     res.send('CBT Backend API is running...');
 });
 
+// Mount your API routes with their respective base paths
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/subjects', subjectRoutes);
 app.use('/api/admin/questions', questionRoutes);
-app.use('/api/exams', examRoutes); // This is where exam routes are mounted
+app.use('/api/exams', examRoutes);
 app.use('/api/results', resultRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/payments', paymentRoutes); // Mount payment routes
 
-// --- NEW LINE: USE PAYMENT ROUTES ---
-app.use('/api/payments', paymentRoutes);
-// --- END NEW LINE ---
-
+// Error handling middleware (should be the last middleware)
 app.use(errorHandler);
 
+// Define the port for the server to listen on
 const PORT = process.env.PORT || 5000;
 
+// Start the server
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
 
+// Handle unhandled promise rejections to prevent process from crashing
 process.on('unhandledRejection', (err, promise) => {
     console.error(`Error: ${err.message}`);
+    // Close the server and exit the process if it's still listening
     if (app._isListening) {
         app.close(() => process.exit(1));
     } else {
