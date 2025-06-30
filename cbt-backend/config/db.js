@@ -14,10 +14,7 @@ const connectDB = async () => {
       console.error("Error: MONGO_URI environment variable is not defined.");
       process.exit(1); // Exit if the crucial URI is missing
     }
-
-    // Your MongoDB Atlas connection string from Render's environment variable
-    // IMPORTANT: Ensure this URI in Render's env variable includes '/test'
-    // e.g., mongodb+srv://CityAppUsers:benchycity1977@cityappusers.rvg3af6.mongodb.net/test?retryWrites=true&w=majority&appName=CityAppUsers
+  
     const uri = process.env.MONGO_URI;
 
     // Create a MongoClient instance
