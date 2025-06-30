@@ -1,9 +1,8 @@
-// cbt-frontend/src/api/apiClient.js (or wherever you configure Axios)
-
+// cbt-frontend/src/api/apiClient.js 
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: 'http://localhost:5000/api', // Or just '/api' if you're using a proxy in vite.config.js
+  baseURL: '/api', // Or just '/api' if you're using a proxy in vite.config.js
   withCredentials: true, // <-- Make sure this is true if you send cookies
   headers: {
     'Content-Type': 'application/json', // Default, might be overridden for file uploads
