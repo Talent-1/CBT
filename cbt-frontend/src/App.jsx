@@ -71,6 +71,8 @@ function App() {
         return <p>Loading application...</p>; // Or a proper full-page loading spinner
     }
 
+
+    
     return (
         <Router>
             <div className="app-container">
