@@ -2,7 +2,7 @@
 import axios from 'axios';
 
 const apiClient = axios.create({
-  baseURL: '/api', // Or just '/api' if you're using a proxy in vite.config.js
+  baseURL: import.meta.env.VITE_APP_API_BASE_URL, // Or just '/api' if you're using a proxy in vite.config.js
   withCredentials: true, // <-- Make sure this is true if you send cookies
   headers: {
     'Content-Type': 'application/json', // Default, might be overridden for file uploads
