@@ -1106,19 +1106,19 @@ function AdminDashboard() {
                         <tbody>
                             {allResults.length > 0 ? (
                                 allResults.map(result => {
-                                    // Defensive checks for nested fields
-                                    const studentId = result.student && result.student.studentId ? result.student.studentId : 'N/A';
-                                    const fullName = result.student && result.student.fullName ? result.student.fullName : 'N/A';
-                                    const classLevel = result.exam && result.exam.classLevel ? result.exam.classLevel : 'N/A';
-                                    const section = result.student && result.student.section ? result.student.section : 'N/A';
-                                    const department = result.student && result.student.areaOfSpecialization ? result.student.areaOfSpecialization : 'N/A';
-                                    const examTitle = result.exam && result.exam.title ? result.exam.title : 'N/A';
-                                    const subjectName = result.subject && result.subject.name ? result.subject.name : 'N/A';
+                                    // Use flat fields from backend response
+                                    const studentId = result.user || 'N/A';
+                                    const fullName = result.student_name || 'N/A';
+                                    const classLevel = result.student_classLevel || 'N/A';
+                                    const section = result.student_section || 'N/A';
+                                    const department = result.student_department || 'N/A'; // If you have department, else leave as 'N/A'
+                                    const examTitle = result.exam_title || 'N/A';
+                                    const subjectName = result.subject_name || 'N/A'; // If you have subject_name, else leave as 'N/A'
                                     const score = typeof result.score === 'number' ? result.score : 'N/A';
-                                    const maxScore = typeof result.maxScore === 'number' ? result.maxScore : 'N/A';
+                                    const maxScore = typeof result.total_questions === 'number' ? result.total_questions : 'N/A';
                                     let dateStr = 'N/A';
-                                    if (result.createdAt) {
-                                        const d = new Date(result.createdAt);
+                                    if (result.date_taken) {
+                                        const d = new Date(result.date_taken);
                                         dateStr = isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
                                     }
                                     return (
