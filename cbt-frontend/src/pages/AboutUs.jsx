@@ -1,5 +1,5 @@
 import React from 'react';
-import './AboutUs.css';
+import '../../styles/AboutUs.css'; // Adjust the path based on your project structure
 
 const AboutUs = () => {
   return (

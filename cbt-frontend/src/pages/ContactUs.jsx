@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './ContactUs.css';
+import '../../styles/ContactUs.css'; // Adjust the path based on your project structure
 
 const ContactUs = () => {
   const [form, setForm] = useState({ name: '', email: '', message: '' });
