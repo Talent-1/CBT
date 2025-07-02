@@ -1,0 +1,71 @@
+.about-us-container {
+  max-width: 800px;
+  margin: 40px auto 60px auto;
+  padding: 32px 28px 24px 28px;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 4px 32px rgba(0,0,0,0.08), 0 1.5px 6px rgba(0,0,0,0.04);
+  font-family: 'Segoe UI', 'Roboto', Arial, sans-serif;
+  color: #222;
+}
+
+.about-us-container h1 {
+  color: #0a3c7d;
+  font-size: 2.5rem;
+  margin-bottom: 18px;
+  text-align: center;
+  letter-spacing: 1px;
+}
+
+.about-us-container h2 {
+  color: #1e6bb8;
+  font-size: 1.5rem;
+  margin-top: 32px;
+  margin-bottom: 10px;
+  border-left: 4px solid #1e6bb8;
+  padding-left: 10px;
+  background: linear-gradient(90deg, #eaf6ff 60%, transparent 100%);
+}
+
+.about-us-container p {
+  font-size: 1.08rem;
+  line-height: 1.7;
+  margin-bottom: 18px;
+}
+
+.about-us-container ul {
+  margin: 0 0 18px 18px;
+  padding: 0;
+  font-size: 1.08rem;
+}
+
+.about-us-container li {
+  margin-bottom: 8px;
+  padding-left: 4px;
+  list-style: disc inside;
+}
+
+.about-us-container a {
+  color: #0a3c7d;
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.about-us-container a:hover {
+  color: #1e6bb8;
+}
+
+@media (max-width: 600px) {
+  .about-us-container {
+    padding: 16px 6px 12px 6px;
+    font-size: 0.98rem;
+  }
+  .about-us-container h1 {
+    font-size: 1.5rem;
+  }
+  .about-us-container h2 {
+    font-size: 1.1rem;
+    padding-left: 6px;
+  }
+}

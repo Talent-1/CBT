@@ -20,6 +20,8 @@ function Header() {
           <h1>CITY GROUP OF SCHOOLS, OGIDI/UMUOJI</h1>
         </Link>
         <nav className="main-nav">
+          <Link to="/about">About</Link>
+          <Link to="/contact">Contact</Link>
           {user ? (
             <>
               <span className="welcome-message">Welcome, {user.fullName || user.username}!</span>
@@ -31,8 +33,8 @@ function Header() {
               )}
               {user.role === 'teacher' && (
                 <>
-                   <Link to="/dashboard">Dashboard</Link> {/* Teachers might have a simpler dashboard initially */}
-                   <Link to="/admin">Admin Tools</Link> {/* If teachers use admin section too */}
+                   <Link to="/dashboard">Dashboard</Link>
+                   <Link to="/admin">Admin Tools</Link>
                 </>
               )}
               {user.role === 'admin' && (

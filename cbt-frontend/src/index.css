@@ -32,6 +32,19 @@ html {
   background-color: #242424; /* Fallback for transparency */
 }
 
+@media (max-width: 768px) {
+  html {
+    background-size: contain; /* Ensures the whole image is visible on mobile */
+    background-repeat: no-repeat;
+    background-position: top center;
+    background-attachment: scroll; /* Prevents overlay issues on mobile */
+    min-height: 100vh;
+  }
+  #root {
+    background-color: rgba(0,0,0,0.85); /* Slightly more opaque for readability */
+  }
+}
+
 #root {
   display: flex;
   flex-direction: column;
@@ -81,9 +94,31 @@ html {
   font-weight: bold;
 }
 
+.logo-link h1 {
+  font-size: 1.5em;
+  margin: 0;
+  white-space: normal;
+  word-break: break-word;
+  text-align: left;
+}
+
 .school-logo {
   height: 40px; /* Adjust as needed */
   margin-right: 10px;
+}
+
+@media (max-width: 600px) {
+  .logo-link h1 {
+    font-size: 1.05em;
+    text-align: left;
+    line-height: 1.2;
+    max-width: 70vw;
+    padding-right: 4px;
+  }
+  .school-logo {
+    height: 28px;
+    margin-right: 6px;
+  }
 }
 
 .main-nav a, .main-nav button {

@@ -10,6 +10,8 @@ import AdminDashboard from './pages/AdminDashboard'; // This is your ADMIN/BRANC
 import NotFound from './pages/NotFound';
 import PaymentPage from './pages/PaymentPage';
 import InvoicePage from './pages/InvoicePage';
+import AboutUs from './pages/AboutUs';
+import ContactUs from './pages/ContactUs';
 
 import Header from './components/Header';
 import Footer from './components/Footer';
@@ -115,6 +117,12 @@ function App() {
                         <Route element={<PrivateRoute allowedRoles={['admin', 'branch_admin']} />}>
                             <Route path="/admin" element={<AdminDashboard />} />
                         </Route>
+
+                        {/* Public About Us Page */}
+                        <Route path="/about" element={<AboutUs />} />
+
+                        {/* Public Contact Us Page */}
+                        <Route path="/contact" element={<ContactUs />} />
 
                         {/* Catch-all route for 404 Not Found */}
                         <Route path="*" element={<NotFound />} />
