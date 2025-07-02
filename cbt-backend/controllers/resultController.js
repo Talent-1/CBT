@@ -55,8 +55,8 @@ exports.getAllResults = async (req, res) => {
 
         // Fetch results with necessary populations
         const results = await Result.find(resultQuery)
-            .populate('user', 'fullName studentId classLevel section')
-            .populate('exam', 'title totalQuestionsCount')
+            .populate('user', 'fullName studentId classLevel section department') // Added department
+            .populate('exam', 'title totalQuestionsCount subjectsIncluded') // Added subjectsIncluded
             .sort({ createdAt: -1 });
 
         // Transform results to ensure all expected fields are present for frontend display
@@ -72,7 +72,9 @@ exports.getAllResults = async (req, res) => {
             date_taken: result.dateTaken,
             createdAt: result.createdAt,
             student_classLevel: result.user ? result.user.classLevel : 'N/A',
-            student_section: result.user ? result.user.section : 'N/A'
+            student_section: result.user ? result.user.section : 'N/A',
+            student_department: result.user && result.user.department ? result.user.department : 'N/A', // Added department
+            subject_name: (result.exam && result.exam.subjectsIncluded && result.exam.subjectsIncluded.length > 0 && result.exam.subjectsIncluded[0].subjectName) ? result.exam.subjectsIncluded[0].subjectName : 'N/A' // Added subject_name (first subject)
         }));
 
         console.log(`DEBUG (getAllResults): Fetched ${transformedResults.length} results after all filters.`);
