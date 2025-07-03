@@ -11,13 +11,12 @@ import {
     addExam,
     getAllQuestions,
     getAllSubjects,
-    deleteExam,
-    updateExam
+    deleteExam
 } from '../api/admin';
 import { getExams } from '../api/exams';
 import api from '../api/api'; // Your Axios instance
 import { SCHOOL_BANK_DETAILS } from '../utils/paymentUtils';
-import { deleteQuestion, updateQuestion } from '../api/questions';
+import { deleteQuestion } from '../api/questions';
 
 import '/src/style/AdminDashboard.css'; // Make sure this CSS file is correctly linked and updated
 
@@ -518,10 +517,16 @@ function AdminDashboard() {
             let paymentsToSet = [];
             // If a specific term is entered, prioritize term search for a single payment
             if (isTermSearch && !isFilterSearch) { 
-                console.log(`
-                
-                if (response.data.payment && response.data.payment.status !== 'pending') {
-                    setUpdatePaymentFeedback(`Note: This payment is already ${response.data.payment.status}.`);
+                console.log(`Searching for payment with term: ${paymentSearchTerm}`);
+                const response = await api.get(`/payments/search?term=${encodeURIComponent(paymentSearchTerm.trim())}`);
+                if (response.data && response.data.payment) {
+                    setFoundPayment(response.data.payment);
+                    paymentsToSet = [];
+                    if (response.data.payment && response.data.payment.status !== 'pending') {
+                        setUpdatePaymentFeedback(`Note: This payment is already ${response.data.payment.status}.`);
+                    }
+                } else {
+                    setPaymentSearchError('No payment found for the provided search term.');
                 }
             } else if (isFilterSearch) { // Handle class/section filtering for multiple payments
                 const filterParams = new URLSearchParams();
@@ -596,7 +601,7 @@ function AdminDashboard() {
     };
 
     // Handle Edit Exam (basic modal logic, you can expand)
-    const handleEditExam = (exam) => {
+    const handleEditExam = () => {
         // Example: set state to open a modal and populate with exam data
         // setEditExamModalOpen(true);
         // setExamToEdit(exam);
@@ -604,7 +609,7 @@ function AdminDashboard() {
     };
 
     // Handle Edit Question (basic modal logic, you can expand)
-    const handleEditQuestion = (question) => {
+    const handleEditQuestion = () => {
         // Example: set state to open a modal and populate with question data
         // setEditQuestionModalOpen(true);
         // setQuestionToEdit(question);
