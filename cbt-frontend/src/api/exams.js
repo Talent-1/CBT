@@ -54,6 +54,9 @@ export const deleteExam = async (examId) => {
     const response = await apiClient.delete(`/exams/${examId}`);
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 404) {
+      throw 'Exam not found or already deleted.';
+    }
     throw error.response?.data?.message || 'Failed to delete exam';
   }
 };
