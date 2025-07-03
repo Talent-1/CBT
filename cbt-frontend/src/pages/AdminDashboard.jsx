@@ -1042,111 +1042,124 @@ function AdminDashboard() {
             <section className="section">
                 <h2 className="sectionHeader">Student Results</h2>
                 <div className="resultsFilter">
-                    <div className="formGroup">
-                        <label htmlFor="resultsClassLevel" className="label">Filter by Class Level:</label>
-                        <select
-                            id="resultsClassLevel"
-                            value={selectedResultsClassLevel}
-                            onChange={(e) => setSelectedResultsClassLevel(e.target.value)}
-                            className="select"
-                        >
-                            <option value="">All Class Levels</option>
-                            {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
-                        </select>
-                    </div>
-                    <div className="formGroup">
-                        <label htmlFor="resultsSubClassLevel" className="label">Filter by Section:</label>
-                        <select
-                            id="resultsSubClassLevel"
-                            value={selectedResultsSubClassLevel}
-                            onChange={(e) => setSelectedResultsSubClassLevel(e.target.value)}
-                            className="select"
-                            disabled={!selectedResultsClassLevel || availableResultsSubClassLevels.length === 0}
-                        >
-                            <option value="">All Sections</option>
-                            {availableResultsSubClassLevels.map(section => (
-                                <option key={section} value={section}>{section}</option>
-                            ))}
-                        </select>
-                    </div>
-                    {selectedResultsClassLevel && isSeniorSecondaryClass(selectedResultsClassLevel) && (
-                        <div className="formGroup">
-                            <label htmlFor="resultsDepartment" className="label">Filter by Department:</label>
-                            <select
-                                id="resultsDepartment"
-                                value={selectedResultsDepartment}
-                                onChange={(e) => setSelectedResultsDepartment(e.target.value)}
-                                className="select"
-                                disabled={availableResultsDepartments.length === 0}
-                            >
-                                <option value="">All Departments</option>
-                                {availableResultsDepartments.map(dept => (
-                                    <option key={dept} value={dept}>{dept}</option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </div>
-                <div className="tableContainer">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Student ID</th>
-                                <th>Name</th>
-                                <th>Class</th>
-                                <th>Section</th>
-                                <th>Department</th>
-                                <th>Exam Title</th>
-                                <th>Subject</th>
-                                <th>Score</th>
-                                <th>Max Score</th>
-                                <th>Date</th>
+        <div className="formGroup">
+            <label htmlFor="resultsClassLevel" className="label">Filter by Class Level:</label>
+            <select
+                id="resultsClassLevel"
+                value={selectedResultsClassLevel}
+                onChange={(e) => setSelectedResultsClassLevel(e.target.value)}
+                className="select"
+            >
+                <option value="">All Class Levels</option>
+                {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
+            </select>
+        </div>
+        <div className="formGroup">
+            <label htmlFor="resultsSubClassLevel" className="label">Filter by Section:</label>
+            <select
+                id="resultsSubClassLevel"
+                value={selectedResultsSubClassLevel}
+                onChange={(e) => setSelectedResultsSubClassLevel(e.target.value)}
+                className="select"
+                disabled={!selectedResultsClassLevel || availableResultsSubClassLevels.length === 0}
+            >
+                <option value="">All Sections</option>
+                {availableResultsSubClassLevels.map(section => (
+                    <option key={section} value={section}>{section}</option>
+                ))}
+            </select>
+        </div>
+        {selectedResultsClassLevel && isSeniorSecondaryClass(selectedResultsClassLevel) && (
+            <div className="formGroup">
+                <label htmlFor="resultsDepartment" className="label">Filter by Department:</label>
+                <select
+                    id="resultsDepartment"
+                    value={selectedResultsDepartment}
+                    onChange={(e) => setSelectedResultsDepartment(e.target.value)}
+                    className="select"
+                    disabled={availableResultsDepartments.length === 0}
+                >
+                    <option value="">All Departments</option>
+                    {availableResultsDepartments.map(dept => (
+                        <option key={dept} value={dept}>{dept}</option>
+                    ))}
+                </select>
+            </div>
+        )}
+    </div>
+    <button className="submitButton printButton" onClick={() => window.print()} style={{marginBottom: '1rem'}}>Print Results</button>
+    <div className="tableContainer results-printable">
+        <table>
+            <thead>
+                <tr>
+                    <th>Student ID</th>
+                    <th>Name</th>
+                    <th>Class</th>
+                    <th>Section</th>
+                    <th>Department</th>
+                    <th>Exam Title</th>
+                    <th>Subject</th>
+                    <th>Score</th>
+                    <th>Max Score</th>
+                    <th>Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {allResults.length > 0 ? (
+                    allResults.slice(0, 50).map(result => {
+                        // Use correct fields from backend response
+                        const studentId = result.student_id || result.user || 'N/A';
+                        const fullName = result.student_name || 'N/A';
+                        const classLevel = result.student_classLevel || 'N/A';
+                        const section = result.student_section || 'N/A';
+                        const department = result.student_department || 'N/A';
+                        const examTitle = result.exam_title || 'N/A';
+                        const subjectName = result.subject_name || 'N/A';
+                        const score = typeof result.score === 'number' ? result.score : 'N/A';
+                        const maxScore = typeof result.total_questions === 'number' ? result.total_questions : 'N/A';
+                        let dateStr = 'N/A';
+                        if (result.date_taken) {
+                            const d = new Date(result.date_taken);
+                            dateStr = isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
+                        }
+                        return (
+                            <tr key={result._id}>
+                                <td>{studentId}</td>
+                                <td>{fullName}</td>
+                                <td>{classLevel}</td>
+                                <td>{section}</td>
+                                <td>{department}</td>
+                                <td>{examTitle}</td>
+                                <td>{subjectName}</td>
+                                <td>{score}</td>
+                                <td>{maxScore}</td>
+                                <td>{dateStr}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {allResults.length > 0 ? (
-                                allResults.map(result => {
-                                    // Use flat fields from backend response
-                                    const studentId = result.user || 'N/A';
-                                    const fullName = result.student_name || 'N/A';
-                                    const classLevel = result.student_classLevel || 'N/A';
-                                    const section = result.student_section || 'N/A';
-                                    const department = result.student_department || 'N/A'; // If you have department, else leave as 'N/A'
-                                    const examTitle = result.exam_title || 'N/A';
-                                    const subjectName = result.subject_name || 'N/A'; // If you have subject_name, else leave as 'N/A'
-                                    const score = typeof result.score === 'number' ? result.score : 'N/A';
-                                    const maxScore = typeof result.total_questions === 'number' ? result.total_questions : 'N/A';
-                                    let dateStr = 'N/A';
-                                    if (result.date_taken) {
-                                        const d = new Date(result.date_taken);
-                                        dateStr = isNaN(d.getTime()) ? 'N/A' : d.toLocaleDateString();
-                                    }
-                                    return (
-                                        <tr key={result._id}>
-                                            <td>{studentId}</td>
-                                            <td>{fullName}</td>
-                                            <td>{classLevel}</td>
-                                            <td>{section}</td>
-                                            <td>{department}</td>
-                                            <td>{examTitle}</td>
-                                            <td>{subjectName}</td>
-                                            <td>{score}</td>
-                                            <td>{maxScore}</td>
-                                            <td>{dateStr}</td>
-                                        </tr>
-                                    );
-                                })
-                            ) : (
-                                <tr>
-                                    <td colSpan="10">No results found for the selected filters.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                </div>
-            </section>
+                        );
+                    })
+                ) : (
+                    <tr>
+                        <td colSpan="10">No results found for the selected filters.</td>
+                    </tr>
+                )}
+            </tbody>
+        </table>
+    </div>
+</section>
         </div>
     );
 }
 
 export default AdminDashboard;
+
+/* PRINT STYLES */
+<style>{`
+@media print {
+  body * { visibility: hidden !important; }
+  .results-printable, .results-printable * { visibility: visible !important; }
+  .results-printable { position: absolute; left: 0; top: 0; width: 100vw; background: #fff; z-index: 9999; }
+  .results-printable table { width: 100%; font-size: 12px; }
+  .results-printable th, .results-printable td { padding: 2px 4px; }
+  .printButton, .resultsFilter, .header, .footer, nav, .logoutButton { display: none !important; }
+}
+`}</style>
