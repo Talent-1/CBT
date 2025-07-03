@@ -572,6 +572,28 @@ function AdminDashboard() {
         updatePaymentStatus(foundPayment._id, 'successful');
     };
 
+    // NEW: Handler stubs for exam and question edit/delete
+    const handleDeleteExam = (examId) => {
+        if (window.confirm('Are you sure you want to delete this exam?')) {
+            // TODO: Call API to delete exam, then refresh exams list
+            alert('Delete exam: ' + examId);
+        }
+    };
+    const handleEditExam = (exam) => {
+        // TODO: Open edit modal or navigate to edit page
+        alert('Edit exam: ' + exam.title);
+    };
+    const handleDeleteQuestion = (questionId) => {
+        if (window.confirm('Are you sure you want to delete this question?')) {
+            // TODO: Call API to delete question, then refresh questions list
+            alert('Delete question: ' + questionId);
+        }
+    };
+    const handleEditQuestion = (question) => {
+        // TODO: Open edit modal or navigate to edit page
+        alert('Edit question: ' + question.questionText);
+    };
+
 
     // Render loading states first
     if (authLoading || dataLoading) {
@@ -973,6 +995,7 @@ function AdminDashboard() {
                                     <th>Branch</th>
                                     <th>Subjects</th>
                                     <th>Created Date</th>
+                                    <th>Actions</th>
                             </tr>
                         </thead> 
                         <tbody>
@@ -981,18 +1004,22 @@ function AdminDashboard() {
                                     <tr key={exam._id}>
                                         <td>{exam.title}</td>
                                         <td>{exam.classLevel}</td>
-                                        <td>{exam.areaOfSpecialization || 'N/A'}</td> {/* NEW */}
+                                        <td>{exam.areaOfSpecialization || 'N/A'}</td>
                                         <td>{exam.duration}</td>
                                         <td>{renderSafeString(exam.branch?.name)}</td>
                                         <td>
                                             {exam.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}
                                         </td>
                                         <td>{new Date(exam.createdAt).toLocaleDateString()}</td>
+                                        <td>
+                                            <button className="actionButton edit" onClick={() => handleEditExam(exam)} title="Edit Exam">Edit</button>
+                                            <button className="actionButton delete" onClick={() => handleDeleteExam(exam._id)} title="Delete Exam">Delete</button>
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="7">No exams found.</td>
+                                    <td colSpan="8">No exams found.</td>
                                 </tr>
                             )}
                         </tbody>
@@ -1011,6 +1038,7 @@ function AdminDashboard() {
                                 <th>Subject</th>
                                 <th>Options</th>
                                 <th>Correct Option</th>
+                                <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -1026,11 +1054,15 @@ function AdminDashboard() {
                                             ))}
                                         </td>
                                         <td>{String.fromCharCode(65 + q.correctOptionIndex)}</td>
+                                        <td>
+                                            <button className="actionButton edit" onClick={() => handleEditQuestion(q)} title="Edit Question">Edit</button>
+                                            <button className="actionButton delete" onClick={() => handleDeleteQuestion(q._id)} title="Delete Question">Delete</button>
+                                        </td>
                                     </tr>
                                 ))
                             ) : (
                                 <tr>
-                                    <td colSpan="5">No questions found.</td>
+                                    <td colSpan="6">No questions found.</td>
                                 </tr>
                             )}
                         </tbody>
