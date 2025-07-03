@@ -47,3 +47,23 @@ export const submitExam = async (examId, answers) => {
     throw error.response?.data?.message || 'Failed to submit exam';
   }
 };
+
+// Delete an exam by ID
+export const deleteExam = async (examId) => {
+  try {
+    const response = await apiClient.delete(`/exams/${examId}`);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to delete exam';
+  }
+};
+
+// Update an exam by ID
+export const updateExam = async (examId, updatedData) => {
+  try {
+    const response = await apiClient.put(`/exams/${examId}`, updatedData);
+    return response.data;
+  } catch (error) {
+    throw error.response?.data?.message || 'Failed to update exam';
+  }
+};
