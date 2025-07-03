@@ -10,11 +10,14 @@ import {
     getAllUsers,
     addExam,
     getAllQuestions,
-    getAllSubjects
+    getAllSubjects,
+    deleteExam,
+    updateExam
 } from '../api/admin';
 import { getExams } from '../api/exams';
 import api from '../api/api'; // Your Axios instance
 import { SCHOOL_BANK_DETAILS } from '../utils/paymentUtils';
+import { deleteQuestion, updateQuestion } from '../api/questions';
 
 import '/src/style/AdminDashboard.css'; // Make sure this CSS file is correctly linked and updated
 
@@ -515,10 +518,7 @@ function AdminDashboard() {
             let paymentsToSet = [];
             // If a specific term is entered, prioritize term search for a single payment
             if (isTermSearch && !isFilterSearch) { 
-                console.log(`Searching for single payment with term: ${paymentSearchTerm}`);
-                const response = await api.get(`/payments/search?term=${paymentSearchTerm}`);
-                setFoundPayment(response.data.payment); // Set the single found payment
-                paymentsToSet = response.data.payment ? [response.data.payment] : []; // For filteredPayments state
+                console.log(`
                 
                 if (response.data.payment && response.data.payment.status !== 'pending') {
                     setUpdatePaymentFeedback(`Note: This payment is already ${response.data.payment.status}.`);
@@ -573,25 +573,42 @@ function AdminDashboard() {
     };
 
     // NEW: Handler stubs for exam and question edit/delete
-    const handleDeleteExam = (examId) => {
-        if (window.confirm('Are you sure you want to delete this exam?')) {
-            // TODO: Call API to delete exam, then refresh exams list
-            alert('Delete exam: ' + examId);
+    const handleDeleteExam = async (examId) => {
+        if (!window.confirm('Are you sure you want to delete this exam? This action cannot be undone.')) return;
+        try {
+            await deleteExam(examId);
+            setExams(prev => prev.filter(e => e._id !== examId));
+            setFeedbackMessage('Exam deleted successfully.');
+        } catch (err) {
+            setError(err.toString());
         }
     };
+
+    const handleDeleteQuestion = async (questionId) => {
+        if (!window.confirm('Are you sure you want to delete this question? This action cannot be undone.')) return;
+        try {
+            await deleteQuestion(questionId);
+            setAllQuestions(prev => prev.filter(q => q._id !== questionId));
+            setFeedbackMessage('Question deleted successfully.');
+        } catch (err) {
+            setError(err.toString());
+        }
+    };
+
+    // Handle Edit Exam (basic modal logic, you can expand)
     const handleEditExam = (exam) => {
-        // TODO: Open edit modal or navigate to edit page
-        alert('Edit exam: ' + exam.title);
+        // Example: set state to open a modal and populate with exam data
+        // setEditExamModalOpen(true);
+        // setExamToEdit(exam);
+        alert('Edit Exam feature coming soon!');
     };
-    const handleDeleteQuestion = (questionId) => {
-        if (window.confirm('Are you sure you want to delete this question?')) {
-            // TODO: Call API to delete question, then refresh questions list
-            alert('Delete question: ' + questionId);
-        }
-    };
+
+    // Handle Edit Question (basic modal logic, you can expand)
     const handleEditQuestion = (question) => {
-        // TODO: Open edit modal or navigate to edit page
-        alert('Edit question: ' + question.questionText);
+        // Example: set state to open a modal and populate with question data
+        // setEditQuestionModalOpen(true);
+        // setQuestionToEdit(question);
+        alert('Edit Question feature coming soon!');
     };
 
 
