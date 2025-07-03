@@ -7,6 +7,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
+const path = require('path');
 
 const connectDB = require('./config/db');
 
@@ -65,6 +66,10 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'Authorization'], // Allowed request headers
 }));
 
+// Serve static files from the frontend build directory
+const frontendBuildPath = path.join(__dirname, '..', 'cbt-frontend', 'dist'); // Adjust if your build folder is different
+app.use(express.static(frontendBuildPath));
+
 // Basic route for root URL to confirm API is running
 app.get('/', (req, res) => {
     res.send('CBT Backend API is running...');
@@ -80,6 +85,13 @@ app.use('/api/results', resultRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/payments', paymentRoutes); // Mount payment routes
+
+// Catch-all route: serve index.html for any non-API, non-static asset route (for React Router)
+app.get('*', (req, res) => {
+    // If the request starts with /api, let the API routes handle it
+    if (req.path.startsWith('/api')) return res.status(404).json({ message: 'API route not found' });
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+});
 
 // Error handling middleware (should be the last middleware)
 app.use(errorHandler);
