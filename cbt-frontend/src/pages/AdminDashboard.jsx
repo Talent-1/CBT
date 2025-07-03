@@ -11,12 +11,13 @@ import {
     addExam,
     getAllQuestions,
     getAllSubjects,
-    deleteExam
+    deleteExam,
+    updateExam
 } from '../api/admin';
 import { getExams } from '../api/exams';
 import api from '../api/api'; // Your Axios instance
 import { SCHOOL_BANK_DETAILS } from '../utils/paymentUtils';
-import { deleteQuestion } from '../api/questions';
+import { deleteQuestion, updateQuestion } from '../api/questions';
 
 import '/src/style/AdminDashboard.css'; // Make sure this CSS file is correctly linked and updated
 
@@ -584,6 +585,7 @@ function AdminDashboard() {
             await deleteExam(examId);
             setExams(prev => prev.filter(e => e._id !== examId));
             setFeedbackMessage('Exam deleted successfully.');
+            if (examToEdit && examToEdit._id === examId) closeEditExamModal();
         } catch (err) {
             setError(err.toString());
         }
@@ -595,25 +597,121 @@ function AdminDashboard() {
             await deleteQuestion(questionId);
             setAllQuestions(prev => prev.filter(q => q._id !== questionId));
             setFeedbackMessage('Question deleted successfully.');
+            if (questionToEdit && questionToEdit._id === questionId) closeEditQuestionModal();
         } catch (err) {
             setError(err.toString());
         }
     };
 
-    // Handle Edit Exam (basic modal logic, you can expand)
-    const handleEditExam = () => {
-        // Example: set state to open a modal and populate with exam data
-        // setEditExamModalOpen(true);
-        // setExamToEdit(exam);
-        alert('Edit Exam feature coming soon!');
+    // --- MODAL STATE FOR EDITING EXAMS & QUESTIONS ---
+    const [editExamModalOpen, setEditExamModalOpen] = useState(false);
+    const [examToEdit, setExamToEdit] = useState(null);
+    const [editExamForm, setEditExamForm] = useState({});
+
+    const [editQuestionModalOpen, setEditQuestionModalOpen] = useState(false);
+    const [questionToEdit, setQuestionToEdit] = useState(null);
+    const [editQuestionForm, setEditQuestionForm] = useState({});
+
+
+    // Handle Edit Exam (open modal and populate form)
+    const handleEditExam = (exam) => {
+        setExamToEdit(exam);
+        setEditExamForm({
+            title: exam.title || '',
+            classLevel: exam.classLevel || '',
+            duration: exam.duration || '',
+            branchId: exam.branch?._id || '',
+            areaOfSpecialization: exam.areaOfSpecialization || '',
+            subjectsIncluded: exam.subjectsIncluded || [],
+        });
+        setEditExamModalOpen(true);
     };
 
-    // Handle Edit Question (basic modal logic, you can expand)
-    const handleEditQuestion = () => {
-        // Example: set state to open a modal and populate with question data
-        // setEditQuestionModalOpen(true);
-        // setQuestionToEdit(question);
-        alert('Edit Question feature coming soon!');
+    // Handle Edit Question (open modal and populate form)
+    const handleEditQuestion = (question) => {
+        setQuestionToEdit(question);
+        setEditQuestionForm({
+            questionText: question.questionText || '',
+            classLevel: question.classLevel || '',
+            subject: question.subject?._id || '',
+            optionA: question.options?.[0]?.text || '',
+            optionB: question.options?.[1]?.text || '',
+            optionC: question.options?.[2]?.text || '',
+            optionD: question.options?.[3]?.text || '',
+            correctOption: String.fromCharCode(65 + (question.correctOptionIndex ?? 0)),
+        });
+        setEditQuestionModalOpen(true);
+    };
+
+    // Handle closing modals
+    const closeEditExamModal = () => {
+        setEditExamModalOpen(false);
+        setExamToEdit(null);
+    };
+    const closeEditQuestionModal = () => {
+        setEditQuestionModalOpen(false);
+        setQuestionToEdit(null);
+    };
+
+    // Handle edit form changes
+    const handleEditExamFormChange = (e) => {
+        const { name, value } = e.target;
+        setEditExamForm(prev => ({ ...prev, [name]: value }));
+    };
+    const handleEditQuestionFormChange = (e) => {
+        setEditQuestionForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
+    };
+
+    // Handle saving exam edits
+    const handleSaveExamEdit = async (e) => {
+        e.preventDefault();
+        if (!examToEdit) return;
+        setError('');
+        setFeedbackMessage('');
+        try {
+            await updateExam(examToEdit._id, {
+                ...editExamForm,
+                duration: parseInt(editExamForm.duration),
+            });
+            setFeedbackMessage('Exam updated successfully!');
+            setEditExamModalOpen(false);
+            setExamToEdit(null);
+            await fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to update exam.');
+        }
+    };
+
+    // Handle saving question edits
+    const handleSaveQuestionEdit = async (e) => {
+        e.preventDefault();
+        if (!questionToEdit) return;
+        setError('');
+        setFeedbackMessage('');
+        // Prepare options and correctOptionIndex
+        const optionsArray = [
+            { text: editQuestionForm.optionA },
+            { text: editQuestionForm.optionB },
+            { text: editQuestionForm.optionC },
+            { text: editQuestionForm.optionD },
+        ];
+        const correctOptionMapping = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
+        const correctOptionIndex = correctOptionMapping[editQuestionForm.correctOption.toUpperCase()];
+        try {
+            await updateQuestion(questionToEdit._id, {
+                questionText: editQuestionForm.questionText,
+                classLevel: editQuestionForm.classLevel,
+                subject: editQuestionForm.subject,
+                options: optionsArray,
+                correctOptionIndex,
+            });
+            setFeedbackMessage('Question updated successfully!');
+            setEditQuestionModalOpen(false);
+            setQuestionToEdit(null);
+            await fetchData();
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to update question.');
+        }
     };
 
 
@@ -639,6 +737,117 @@ function AdminDashboard() {
 
             {error && <p className="errorMessage">{error}</p>}
             {feedbackMessage && <p className="successMessage">{feedbackMessage}</p>}
+
+            {/* --- EDIT EXAM MODAL --- */}
+            {editExamModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2>Edit Exam</h2>
+                        <form onSubmit={handleSaveExamEdit} className="form">
+                            <div className="formGroup">
+                                <label>Title:</label>
+                                <input type="text" name="title" value={editExamForm.title} onChange={handleEditExamFormChange} required className="input" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Class Level:</label>
+                                <select name="classLevel" value={editExamForm.classLevel} onChange={handleEditExamFormChange} required className="select">
+                                    <option value="">Select Class Level</option>
+                                    {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
+                                </select>
+                            </div>
+                            {/* Department for senior secondary */}
+                            {editExamForm.classLevel && isSeniorSecondaryClass(editExamForm.classLevel) && (
+                                <div className="formGroup">
+                                    <label>Department:</label>
+                                    <select name="areaOfSpecialization" value={editExamForm.areaOfSpecialization} onChange={handleEditExamFormChange} required className="select">
+                                        <option value="">Select Department</option>
+                                        {DEPARTMENTS.map(dept => (
+                                            <option key={dept} value={dept}>{dept}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+                            <div className="formGroup">
+                                <label>Duration (mins):</label>
+                                <input type="number" name="duration" value={editExamForm.duration} onChange={handleEditExamFormChange} required className="input" min="1" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Branch:</label>
+                                <select name="branchId" value={editExamForm.branchId} onChange={handleEditExamFormChange} required className="select">
+                                    <option value="">Select Branch</option>
+                                    {branches.map(branch => (<option key={branch._id} value={branch._id}>{branch.name}</option>))}
+                                </select>
+                            </div>
+                            {/* Subjects display (read-only) */}
+                            <div className="formGroup">
+                                <label>Subjects:</label>
+                                <div>
+                                    {editExamForm.subjectsIncluded && editExamForm.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}
+                                </div>
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" className="submitButton">Save</button>
+                                <button type="button" className="cancelButton" onClick={closeEditExamModal}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* --- EDIT QUESTION MODAL --- */}
+            {editQuestionModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal">
+                        <h2>Edit Question</h2>
+                        <form onSubmit={handleSaveQuestionEdit} className="form">
+                            <div className="formGroup">
+                                <label>Class Level:</label>
+                                <select name="classLevel" value={editQuestionForm.classLevel} onChange={handleEditQuestionFormChange} required className="select">
+                                    <option value="">Select Class Level</option>
+                                    {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
+                                </select>
+                            </div>
+                            <div className="formGroup">
+                                <label>Subject:</label>
+                                <select name="subject" value={editQuestionForm.subject} onChange={handleEditQuestionFormChange} required className="select">
+                                    <option value="">Select Subject</option>
+                                    {editQuestionForm.classLevel && availableSubjectsGrouped[editQuestionForm.classLevel]?.map(subject => (
+                                        <option key={subject._id} value={subject._id}>{subject.name}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="formGroup">
+                                <label>Question Text:</label>
+                                <textarea name="questionText" value={editQuestionForm.questionText} onChange={handleEditQuestionFormChange} required className="textarea"></textarea>
+                            </div>
+                            <div className="formGroup">
+                                <label>Option A:</label>
+                                <input type="text" name="optionA" value={editQuestionForm.optionA} onChange={handleEditQuestionFormChange} required className="input" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Option B:</label>
+                                <input type="text" name="optionB" value={editQuestionForm.optionB} onChange={handleEditQuestionFormChange} required className="input" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Option C:</label>
+                                <input type="text" name="optionC" value={editQuestionForm.optionC} onChange={handleEditQuestionFormChange} required className="input" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Option D:</label>
+                                <input type="text" name="optionD" value={editQuestionForm.optionD} onChange={handleEditQuestionFormChange} required className="input" />
+                            </div>
+                            <div className="formGroup">
+                                <label>Correct Option (A, B, C, D):</label>
+                                <input type="text" name="correctOption" value={editQuestionForm.correctOption} onChange={handleEditQuestionFormChange} maxLength="1" required className="input" />
+                            </div>
+                            <div className="modal-actions">
+                                <button type="submit" className="submitButton">Save</button>
+                                <button type="button" className="cancelButton" onClick={closeEditQuestionModal}>Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             {authUser.role === 'admin' && (
                 <>
