@@ -9,10 +9,37 @@ function Footer() {
       <div className="footer-content">
         <div className="footer-section social-links">
           <h3>Connect With Us</h3>
-          <ul>
-            <li><a href="https://facebook.com" target="_blank" rel="noopener noreferrer">Facebook</a></li>
-            <li><a href="https://twitter.com" target="_blank" rel="noopener noreferrer">Twitter</a></li>
-            <li><a href="https://instagram.com" target="_blank" rel="noopener noreferrer">Instagram</a></li>
+          <ul className="footer-social-icons">
+            <li>
+              <a href="mailto:info@citygroupschools.com" target="_blank" rel="noopener noreferrer" aria-label="Email">
+                <i className="fas fa-envelope"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+                <i className="fab fa-facebook-f"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://x.com" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter)">
+                <i className="fab fa-x-twitter"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+                <i className="fab fa-instagram"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://tiktok.com" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+                <i className="fab fa-tiktok"></i>
+              </a>
+            </li>
+            <li>
+              <a href="https://wa.me/2348135015436" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">
+                <i className="fab fa-whatsapp"></i>
+              </a>
+            </li>
           </ul>
         </div>
         <div className="footer-section school-addresses">
