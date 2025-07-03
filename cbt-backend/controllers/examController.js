@@ -57,7 +57,7 @@ exports.getAllExams = async (req, res) => {
 exports.addExam = async (req, res) => {
     console.log('DEBUG (addExam): Received request body:', JSON.stringify(req.body, null, 2)); // Detailed log
 
-    const { title, classLevel, duration, branchId, subjectsIncluded } = req.body;
+    const { title, classLevel, duration, branchId, subjectsIncluded, areaOfSpecialization } = req.body;
 
     try {
         if (!title || !classLevel || !duration || !branchId || !subjectsIncluded || subjectsIncluded.length === 0) {
@@ -148,6 +148,7 @@ exports.addExam = async (req, res) => {
             subjectsIncluded: subjectsIncluded, // Frontend sends this, already validated
             questions: examQuestions, // Array of ObjectIds of selected questions
             totalQuestionsCount: totalQuestionsForExam, // Calculated based on actual questions
+            areaOfSpecialization: isSeniorSecondaryClass(classLevel) ? areaOfSpecialization : 'N/A', // Save department if senior
         });
         console.log('DEBUG (addExam): New Exam object created, attempting to save:', newExam);
 

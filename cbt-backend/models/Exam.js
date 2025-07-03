@@ -67,6 +67,11 @@ const examSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch',
         required: true
+    },
+    areaOfSpecialization: { // Department for senior secondary
+        type: String,
+        enum: ['Sciences', 'Arts', 'Commercial', 'N/A'],
+        default: 'N/A',
     }
 }, {
     timestamps: true, // This replaces your manual createdAt field and adds updatedAt too
