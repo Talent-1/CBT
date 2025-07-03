@@ -10,11 +10,9 @@ import {
     getAllUsers,
     addExam,
     getAllQuestions,
-    getAllSubjects,
-    deleteExam,
-    updateExam
+    getAllSubjects
 } from '../api/admin';
-import { getExams } from '../api/exams';
+import { getExams, deleteExam, updateExam } from '../api/exams';
 import api from '../api/api'; // Your Axios instance
 import { SCHOOL_BANK_DETAILS } from '../utils/paymentUtils';
 import { deleteQuestion, updateQuestion } from '../api/questions';
