@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const connectDB = require('./config/db');
 
@@ -69,6 +70,9 @@ app.use(cors({
 // Serve static files from the frontend build directory
 const frontendBuildPath = path.join(__dirname, '..', 'cbt-frontend', 'dist'); // Adjust if your build folder is different
 app.use(express.static(frontendBuildPath));
+
+console.log('Frontend build path:', frontendBuildPath);
+console.log('Index.html exists:', fs.existsSync(path.join(frontendBuildPath, 'index.html')));
 
 // Basic route for root URL to confirm API is running
 app.get('/', (req, res) => {
