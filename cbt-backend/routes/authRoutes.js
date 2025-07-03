@@ -47,7 +47,7 @@ router.post('/register', async (req, res) => {
             gender,
             role: role || 'student',
             branchId,
-            ...(role === 'student' && { section, classLevel }),
+            ...(role === 'student' && { section, classLevel, department: areaOfSpecialization }),
             ...(role === 'teacher' && { areaOfSpecialization }),
         });
 
@@ -77,7 +77,8 @@ router.post('/register', async (req, res) => {
                 role: user.role,
                 branchId: user.branchId,
                 classLevel: user.classLevel,
-                section: user.section
+                section: user.section,
+                department: user.department // Include department in payload
             }
         };
 
@@ -102,6 +103,7 @@ router.post('/register', async (req, res) => {
                         studentId: user.studentId,
                         section: user.section,
                         classLevel: user.classLevel,
+                        department: user.department // Include department in response
                     }
                 });
             }

@@ -68,6 +68,11 @@ const userSchema = mongoose.Schema(
             type: String,
             required: function() { return this.role === 'teacher'; },
         },
+        department: {
+            type: String,
+            enum: ['Sciences', 'Arts', 'Commercial', 'N/A'],
+            default: 'N/A',
+        },
         profilePictureUrl: {
             type: String,
             default: '/path/to/default/avatar.png',
