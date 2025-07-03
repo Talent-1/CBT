@@ -2,8 +2,8 @@
 import { v4 as uuidv4 } from 'uuid';
 
 export const SCHOOL_BANK_DETAILS = {
-  accountName: "CBT Academy School",
-  accountNumber: "0123456789",
+  accountName: "City Secondary School",
+  accountNumber: "3036243418",
   bankName: "First Bank of Nigeria Plc",
 };
 
