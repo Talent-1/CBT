@@ -63,6 +63,7 @@ exports.getAllResults = async (req, res) => {
         const transformedResults = results.map(result => ({
             _id: result._id,
             user: result.user ? result.user._id : null,
+            student_id: result.user && result.user.studentId ? result.user.studentId : 'N/A', // <-- Add studentId for frontend
             student_name: result.user ? result.user.fullName : 'Unknown User',
             exam: result.exam ? result.exam._id : null,
             exam_title: result.exam ? result.exam.title : 'Unknown Exam',
@@ -73,7 +74,9 @@ exports.getAllResults = async (req, res) => {
             createdAt: result.createdAt,
             student_classLevel: result.user ? result.user.classLevel : 'N/A',
             student_section: result.user ? result.user.section : 'N/A',
-            student_department: result.user && result.user.department ? result.user.department : 'N/A', // Added department
+            student_department: (result.user && result.user.department && result.user.department !== 'N/A')
+                ? result.user.department
+                : (result.exam && result.exam.areaOfSpecialization ? result.exam.areaOfSpecialization : 'N/A'), // Try to get department from user, else from exam
             subject_name: (result.exam && result.exam.subjectsIncluded && result.exam.subjectsIncluded.length > 0 && result.exam.subjectsIncluded[0].subjectName) ? result.exam.subjectsIncluded[0].subjectName : 'N/A' // Added subject_name (first subject)
         }));
 
