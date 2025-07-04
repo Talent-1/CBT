@@ -87,11 +87,11 @@ exports.addQuestion = async (req, res) => {
 // @access  Private (Admin only)
 exports.deleteQuestion = async (req, res) => {
     try {
-        const { questionId } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(questionId)) {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid Question ID.' });
         }
-        const deletedQuestion = await Question.findByIdAndDelete(questionId);
+        const deletedQuestion = await Question.findByIdAndDelete(id);
         if (!deletedQuestion) {
             return res.status(404).json({ message: 'Question not found.' });
         }
@@ -107,12 +107,12 @@ exports.deleteQuestion = async (req, res) => {
 // @access  Private (Admin only)
 exports.updateQuestion = async (req, res) => {
     try {
-        const { questionId } = req.params;
-        if (!mongoose.Types.ObjectId.isValid(questionId)) {
+        const { id } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({ message: 'Invalid Question ID.' });
         }
         const updateData = req.body;
-        const updatedQuestion = await Question.findByIdAndUpdate(questionId, updateData, { new: true })
+        const updatedQuestion = await Question.findByIdAndUpdate(id, updateData, { new: true })
             .populate('subject', 'name');
         if (!updatedQuestion) {
             return res.status(404).json({ message: 'Question not found.' });
