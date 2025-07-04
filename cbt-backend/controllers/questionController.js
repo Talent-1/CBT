@@ -82,8 +82,8 @@ exports.addQuestion = async (req, res) => {
     }
 };
 
-// @route   DELETE /api/questions/:questionId
-// @desc    Delete a question
+// @route   DELETE /api/questions/:id
+// @desc    Delete a question and remove its reference from all exams
 // @access  Private (Admin only)
 exports.deleteQuestion = async (req, res) => {
     try {
@@ -95,14 +95,24 @@ exports.deleteQuestion = async (req, res) => {
         if (!deletedQuestion) {
             return res.status(404).json({ message: 'Question not found.' });
         }
-        res.status(200).json({ message: 'Question deleted successfully.' });
+        // Remove this question's ObjectId from all exams that reference it
+        const Exam = require('../models/Exam');
+        const result = await Exam.updateMany(
+            { questions: id },
+            { $pull: { questions: id } }
+        );
+        res.status(200).json({
+            message: 'Question deleted successfully.',
+            questionId: id,
+            examsUpdated: result.modifiedCount || result.nModified || 0
+        });
     } catch (err) {
         console.error('Error deleting question:', err);
         res.status(500).json({ message: 'Server error deleting question.' });
     }
 };
 
-// @route   PUT /api/questions/:questionId
+// @route   PUT /api/questions/:id
 // @desc    Update a question
 // @access  Private (Admin only)
 exports.updateQuestion = async (req, res) => {

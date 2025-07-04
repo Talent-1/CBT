@@ -61,36 +61,6 @@ router.put('/:id', protect, authorizeRoles('admin', 'teacher'), questionControll
 // @desc    Delete a question from the bank
 // @access  Private (Admin/Teacher only)
 // CRITICAL FIX HERE: Use 'protect' and 'authorizeRoles'
-router.delete('/:id', protect, authorizeRoles('admin', 'teacher'), async (req, res) => {
-    try {
-        const deletedQuestion = await Question.findByIdAndDelete(req.params.id);
-
-        if (!deletedQuestion) {
-            return res.status(404).json({ message: 'Question not found.' });
-        }
-
-        // Remove this question's ObjectId from all exams that reference it
-        const Exam = require('../models/Exam');
-        const result = await Exam.updateMany(
-            { questions: req.params.id },
-            { $pull: { questions: req.params.id } }
-        );
-
-        // result.nModified (Mongoose <6) or result.modifiedCount (Mongoose 6+)
-        // For transparency, return the number of exams updated
-        res.json({
-            message: 'Question deleted successfully',
-            questionId: req.params.id,
-            examsUpdated: result.modifiedCount || result.nModified || 0
-        });
-
-    } catch (err) {
-        console.error('Error deleting question:', err.message);
-        if (err.kind === 'ObjectId') {
-            return res.status(400).json({ message: 'Invalid Question ID.' });
-        }
-        res.status(500).json({ message: 'Server error while deleting question.' });
-    }
-});
+router.delete('/:id', protect, authorizeRoles('admin', 'teacher'), questionController.deleteQuestion);
 
 module.exports = router;
