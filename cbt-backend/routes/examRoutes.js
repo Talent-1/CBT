@@ -12,7 +12,9 @@ const {
     addExam,
     getStudentExams,
     getExamQuestions,
-    submitExam
+    submitExam,
+    deleteExam, // ADD
+    updateExam  // ADD
 } = require('../controllers/examController'); // Adjust path as needed
 
 // @route   GET /api/exams
@@ -39,5 +41,15 @@ router.get('/:examId/questions', protect, getExamQuestions);
 // @desc    Submit an exam
 // @access  Private (Student)
 router.post('/:examId/submit', protect, submitExam);
+
+// @route   PUT /api/exams/:examId
+// @desc    Update an exam
+// @access  Private (Admin only)
+router.put('/:examId', protect, authorizeRoles('admin'), updateExam);
+
+// @route   DELETE /api/exams/:examId
+// @desc    Delete an exam
+// @access  Private (Admin only)
+router.delete('/:examId', protect, authorizeRoles('admin'), deleteExam);
 
 module.exports = router;

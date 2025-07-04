@@ -393,3 +393,47 @@ exports.submitExam = async (req, res) => {
         res.status(500).json({ message: 'Server error during exam submission.' });
     }
 };
+
+// @route   DELETE /api/exams/:examId
+// @desc    Delete an exam
+// @access  Private (Admin only)
+exports.deleteExam = async (req, res) => {
+    try {
+        const { examId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(examId)) {
+            return res.status(400).json({ message: 'Invalid Exam ID.' });
+        }
+        const deletedExam = await Exam.findByIdAndDelete(examId);
+        if (!deletedExam) {
+            return res.status(404).json({ message: 'Exam not found.' });
+        }
+        res.status(200).json({ message: 'Exam deleted successfully.' });
+    } catch (err) {
+        console.error('Error deleting exam:', err);
+        res.status(500).json({ message: 'Server error deleting exam.' });
+    }
+};
+
+// @route   PUT /api/exams/:examId
+// @desc    Update an exam
+// @access  Private (Admin only)
+exports.updateExam = async (req, res) => {
+    try {
+        const { examId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(examId)) {
+            return res.status(400).json({ message: 'Invalid Exam ID.' });
+        }
+        const updateData = req.body;
+        const updatedExam = await Exam.findByIdAndUpdate(examId, updateData, { new: true })
+            .populate('createdBy', 'fullName email role')
+            .populate('branchId', 'name')
+            .populate('subjectsIncluded.subjectId', 'name');
+        if (!updatedExam) {
+            return res.status(404).json({ message: 'Exam not found.' });
+        }
+        res.status(200).json({ message: 'Exam updated successfully.', exam: updatedExam });
+    } catch (err) {
+        console.error('Error updating exam:', err);
+        res.status(500).json({ message: 'Server error updating exam.' });
+    }
+};

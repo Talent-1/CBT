@@ -81,3 +81,45 @@ exports.addQuestion = async (req, res) => {
         res.status(500).json({ message: 'Server Error adding question.', error: error.message });
     }
 };
+
+// @route   DELETE /api/questions/:questionId
+// @desc    Delete a question
+// @access  Private (Admin only)
+exports.deleteQuestion = async (req, res) => {
+    try {
+        const { questionId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(questionId)) {
+            return res.status(400).json({ message: 'Invalid Question ID.' });
+        }
+        const deletedQuestion = await Question.findByIdAndDelete(questionId);
+        if (!deletedQuestion) {
+            return res.status(404).json({ message: 'Question not found.' });
+        }
+        res.status(200).json({ message: 'Question deleted successfully.' });
+    } catch (err) {
+        console.error('Error deleting question:', err);
+        res.status(500).json({ message: 'Server error deleting question.' });
+    }
+};
+
+// @route   PUT /api/questions/:questionId
+// @desc    Update a question
+// @access  Private (Admin only)
+exports.updateQuestion = async (req, res) => {
+    try {
+        const { questionId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(questionId)) {
+            return res.status(400).json({ message: 'Invalid Question ID.' });
+        }
+        const updateData = req.body;
+        const updatedQuestion = await Question.findByIdAndUpdate(questionId, updateData, { new: true })
+            .populate('subject', 'name');
+        if (!updatedQuestion) {
+            return res.status(404).json({ message: 'Question not found.' });
+        }
+        res.status(200).json({ message: 'Question updated successfully.', question: updatedQuestion });
+    } catch (err) {
+        console.error('Error updating question:', err);
+        res.status(500).json({ message: 'Server error updating question.' });
+    }
+};
