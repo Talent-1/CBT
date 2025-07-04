@@ -25,6 +25,11 @@ async function hasSuccessfulPayment(userId, classLevel, branchId) {
 // --- END Helper function ---
 
 
+// Helper function to check if a class level is senior secondary
+function isSeniorSecondaryClass(classLevel) {
+    return ['SS1', 'SS2', 'SS3'].includes(classLevel);
+}
+
 // Example: Get all exams
 exports.getAllExams = async (req, res) => {
     try {
