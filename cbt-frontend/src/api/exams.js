@@ -21,16 +21,13 @@ export const getExamQuestions = async (examId) => {
   }
 };
 
-// NEW: Get exams specific to a student's class level and branch
-export const getStudentExams = async (classLevel, branchId) => {
+// NEW: Get exams specific to a student's class level, branch, and department (for senior secondary)
+export const getStudentExams = async (classLevel, branchId, department) => {
   try {
-    // We send classLevel and branchId as query parameters to the backend
-    const response = await apiClient.get('/exams/student-exams', {
-      params: {
-        classLevel,
-        branchId // branchId might be optional depending on your backend logic
-      }
-    });
+    // Send department param only if provided (for senior classes)
+    const params = { classLevel, branchId };
+    if (department) params.department = department;
+    const response = await apiClient.get('/exams/student-exams', { params });
     return response.data; // Expecting an array of exam objects relevant to the student
   } catch (error) {
     throw error.response?.data?.message || 'Failed to fetch student-specific exams';
