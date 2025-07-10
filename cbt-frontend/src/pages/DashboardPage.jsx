@@ -39,13 +39,17 @@ function DashboardPage() {
         setError('');
         setOverallPaymentStatusMessage(''); // Clear previous status messages
         try {
-            console.log(`API Call: Fetching upcoming exams for class level: ${user.classLevel}, branch: ${user.branchId}`);
-            const fetchedExams = await getStudentExams(user.classLevel, user.branchId);
+            // Pass department for senior secondary students
+            let department = undefined;
+            if (["SS1", "SS2", "SS3"].includes(user.classLevel)) {
+                department = user.areaOfSpecialization;
+            }
+            console.log(`API Call: Fetching upcoming exams for class level: ${user.classLevel}, branch: ${user.branchId}, department: ${department}`);
+            const fetchedExams = await getStudentExams(user.classLevel, user.branchId, department);
             setUpcomingExams(fetchedExams);
             console.log('Fetched Upcoming Exams:', fetchedExams);
 
             // Determine overall payment eligibility message based on fetched exams
-            // Assuming if any exam indicates payment is required, the overall status is "Payment Required"
             const requiresPayment = fetchedExams.some(exam => !exam.isPaymentEligibleForExam);
             if (requiresPayment) {
                 setOverallPaymentStatusMessage('Payment Required: You need to settle your outstanding fees to access all exams.');
