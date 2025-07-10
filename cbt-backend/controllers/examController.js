@@ -190,7 +190,9 @@ exports.getStudentExams = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. Only students can view their exams.' });
         }
 
-        const { classLevel, branchId, id: userId } = studentUser;
+        const { classLevel, branchId, areaOfSpecialization, id: userId } = studentUser;
+        // Accept department from query param as fallback (for API flexibility)
+        const department = req.query.department || areaOfSpecialization;
 
         if (!classLevel || !branchId) {
             console.error('Backend: Class level or Branch ID is missing for student user:', studentUser);
@@ -200,7 +202,17 @@ exports.getStudentExams = async (req, res) => {
         const isPaymentEligible = await hasSuccessfulPayment(userId, classLevel, branchId);
         console.log(`DEBUG: Student ${studentUser.fullName} (ID: ${userId}) is payment eligible: ${isPaymentEligible}`);
 
+        // Build query
         const query = { classLevel: classLevel, branchId: branchId };
+        if (isSeniorSecondaryClass(classLevel)) {
+            // Only filter by department for senior classes
+            if (department) {
+                query.areaOfSpecialization = department;
+            } else {
+                // If department is missing, do not show any senior exams
+                query.areaOfSpecialization = { $ne: null };
+            }
+        }
 
         console.log('Backend: Fetching student exams with query:', query);
         const exams = await Exam.find(query)
@@ -218,7 +230,7 @@ exports.getStudentExams = async (req, res) => {
             isPaymentEligibleForExam: isPaymentEligible,
         }));
 
-        console.log(`Backend: Found ${transformedExams.length} exams for class level: ${classLevel}, branchId: ${branchId}.`);
+        console.log(`Backend: Found ${transformedExams.length} exams for class level: ${classLevel}, branchId: ${branchId}, department: ${department}`);
         res.json(transformedExams);
 
     } catch (err) {
