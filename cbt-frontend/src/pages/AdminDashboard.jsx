@@ -618,7 +618,7 @@ function AdminDashboard() {
             title: exam.title || '',
             classLevel: exam.classLevel || '',
             duration: exam.duration || '',
-            branchId: exam.branch?._id || '',
+            branchId: exam.branchId || '',
             areaOfSpecialization: exam.areaOfSpecialization || '',
             subjectsIncluded: exam.subjectsIncluded || [],
         });
