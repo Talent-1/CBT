@@ -1235,7 +1235,7 @@ function AdminDashboard() {
                                         <td>{exam.classLevel}</td>
                                         <td>{exam.areaOfSpecialization || 'N/A'}</td>
                                         <td>{exam.duration}</td>
-                                        <td>{renderSafeString(exam.branch?.name)}</td>
+                                        <td>{renderSafeString(exam.branchId)}</td>
                                         <td>
                                             {exam.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}
                                         </td>
