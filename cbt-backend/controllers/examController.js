@@ -39,9 +39,9 @@ exports.getAllExams = async (req, res) => {
         }
 
         const exams = await Exam.find(query)
-                                .populate('createdBy', 'fullName email role')
-                                .populate('branchId', 'name')
-                                .populate('subjectsIncluded.subjectId', 'name');
+            .populate('createdBy', 'fullName email role')
+            .populate('branchId', 'name')
+            .populate('subjectsIncluded.subject?_id', 'name');
 
         const transformedExams = exams.map(exam => ({
             ...exam.toObject(),
@@ -161,9 +161,9 @@ exports.addExam = async (req, res) => {
         console.log('DEBUG (addExam): New Exam saved successfully. ID:', savedExam._id);
 
         const populatedExam = await Exam.findById(savedExam._id)
-                                         .populate('createdBy', 'fullName email')
-                                         .populate('branchId', 'name')
-                                         .populate('subjectsIncluded.subjectId', 'name');
+            .populate('createdBy', 'fullName email')
+            .populate('branchId', 'name')
+            .populate('subjectsIncluded.subjectId', 'name');
         console.log('DEBUG (addExam): Exam populated successfully.');
 
         res.status(201).json({ message: 'Exam created successfully', exam: populatedExam });
@@ -216,9 +216,9 @@ exports.getStudentExams = async (req, res) => {
 
         console.log('Backend: Fetching student exams with query:', query);
         const exams = await Exam.find(query)
-                               .populate('createdBy', 'fullName')
-                               .populate('branchId', 'name')
-                               .populate('subjectsIncluded.subjectId', 'name');
+            .populate('createdBy', 'fullName')
+            .populate('branchId', 'name')
+            .populate('subjectsIncluded.subjectId', 'name');
 
         const transformedExams = exams.map(exam => ({
             _id: exam._id,
@@ -245,15 +245,15 @@ exports.getStudentExams = async (req, res) => {
 exports.getExamQuestions = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.examId)
-                               .populate({
-                                   path: 'questions',
-                                   model: 'Question',
-                                   populate: {
-                                       path: 'subject',
-                                       model: 'Subject',
-                                       select: 'name'
-                                   }
-                               });
+            .populate({
+                path: 'questions',
+                model: 'Question',
+                populate: {
+                    path: 'subject',
+                    model: 'Subject',
+                    select: 'name'
+                }
+            });
 
         if (!exam) {
             return res.status(404).json({ message: 'Exam not found' });
@@ -271,7 +271,7 @@ exports.getExamQuestions = async (req, res) => {
         if (studentUser.role !== 'student' ||
             exam.classLevel !== studentUser.classLevel ||
             (exam.branchId && exam.branchId.toString() !== studentUser.branchId.toString())) {
-                return res.status(403).json({ message: 'You are not authorized to take this exam.' });
+            return res.status(403).json({ message: 'You are not authorized to take this exam.' });
         }
 
         console.log('Backend DEBUG: Fetched Exam for questions:', exam.title);
