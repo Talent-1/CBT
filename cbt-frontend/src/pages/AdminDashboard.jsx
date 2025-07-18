@@ -1213,46 +1213,26 @@ function AdminDashboard() {
             {/* Existing Sections Below (if any) */}
             <section className="section">
                 <h2 className="sectionHeader">Exam Overview</h2>
-                <div className="tableContainer">
-                    <table>
-                        <thead>
-                             <tr>
-                                    <th>Title</th>
-                                    <th>Class Level</th>
-                                    <th>Department</th>
-                                    <th>Duration (mins)</th>
-                                    <th>Branch</th>
-                                    <th>Subjects</th>
-                                    <th>Created Date</th>
-                                    <th>Actions</th>
-                            </tr>
-                        </thead> 
-                        <tbody>
-                            {exams.length > 0 ? (
-                                exams.map(exam => (
-                                    <tr key={exam._id}>
-                                        <td>{exam.title}</td>
-                                        <td>{exam.classLevel}</td>
-                                        <td>{exam.areaOfSpecialization || 'N/A'}</td>
-                                        <td>{exam.duration}</td>
-                                        <td>{renderSafeString(exam.branchId)}</td>
-                                        <td>
-                                            {exam.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}
-                                        </td>
-                                        <td>{new Date(exam.createdAt).toLocaleDateString()}</td>
-                                        <td>
-                                            <button className="actionButton edit" onClick={() => handleEditExam(exam)} title="Edit Exam">Edit</button>
-                                            <button className="actionButton delete" onClick={() => handleDeleteExam(exam._id)} title="Delete Exam">Delete</button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="8">No exams found.</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
+                <div className="cardGrid">
+                  {exams.length > 0 ? (
+                    exams.map(exam => (
+                      <div className="adminCard" key={exam._id}>
+                        <div className="cardTitle">{exam.title}</div>
+                        <div className="cardDetail"><strong>Class Level:</strong> {exam.classLevel}</div>
+                        <div className="cardDetail"><strong>Department:</strong> {exam.areaOfSpecialization || 'N/A'}</div>
+                        <div className="cardDetail"><strong>Duration:</strong> {exam.duration} mins</div>
+                        <div className="cardDetail"><strong>Branch:</strong> {renderSafeString(exam.branch?.name)}</div>
+                        <div className="cardDetail"><strong>Subjects:</strong> {exam.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}</div>
+                        <div className="cardDetail"><strong>Created Date:</strong> {new Date(exam.createdAt).toLocaleDateString()}</div>
+                        <div className="cardActions">
+                          <button className="actionButton edit" onClick={() => handleEditExam(exam)} title="Edit Exam">Edit</button>
+                          <button className="actionButton delete" onClick={() => handleDeleteExam(exam._id)} title="Delete Exam">Delete</button>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div>No exams found.</div>
+                  )}
                 </div>
             </section>
 
