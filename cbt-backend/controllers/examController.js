@@ -41,7 +41,7 @@ exports.getAllExams = async (req, res) => {
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName email role')
             .populate('branchId', 'name')
-            .populate('subjectsIncluded.subject?_id', 'name');
+            .populate('subjectsIncluded.subjectId', 'name');
 
         const transformedExams = exams.map(exam => ({
             ...exam.toObject(),
