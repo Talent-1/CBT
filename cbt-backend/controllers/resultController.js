@@ -13,6 +13,7 @@ const countCorrectAnswersPerSubject = (answers) => {
 
     answers.forEach(answer => {
         // Ensure question and subject are populated and has an _id and subjectName
+        // With the fix in Subject.js, subjectName should now be present.
         if (answer.question && answer.question.subject && answer.question.subject._id && answer.question.subject.subjectName) {
             const subjectId = answer.question.subject._id.toString(); // Convert to string for consistent key usage
 
@@ -22,6 +23,15 @@ const countCorrectAnswersPerSubject = (answers) => {
             if (answer.isCorrect) {
                 subjectScores[subjectId].score++;
             }
+        } else {
+            // This log will now be less frequent if the Subject.js fix works,
+            // but helpful if there's still missing data or population issues.
+            console.warn("DEBUG (countCorrectAnswersPerSubject): Skipping answer due to missing question/subject data:", {
+                question: answer.question?._id,
+                subjectId: answer.question?.subject?._id,
+                subjectName: answer.question?.subject?.subjectName,
+                isCorrect: answer.isCorrect
+            });
         }
     });
     console.log("DEBUG (countCorrectAnswersPerSubject): Raw counts per subject ID:", subjectScores);
@@ -66,17 +76,16 @@ const compileFinalSubjectAndOverallScores = (result, countedSubjectScores) => {
             }
         });
     } else {
-        console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam ${result.exam?._id} has no subjectsIncluded array.`);
+        console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam ${result.exam?._id} has no subjectsIncluded array or it's not an array.`);
     }
 
     // 2. Add any subjects that were answered but were *not* explicitly listed in exam.subjectsIncluded.
-    // Their scores will be included in the breakdown, but their totals won't contribute to the overall exam score/percentage
-    // because they weren't part of the exam's defined structure. This handles data inconsistencies.
+    // This handles data inconsistencies where questions might exist for subjects not formally part of the exam config.
     Object.keys(countedSubjectScores).forEach(subjectId => {
         const isSubjectAlreadyInBreakdown = finalSubjectScoresBreakdown.some(s => {
-            // Find the original examSubject to get its _id for comparison
+            // Check if this subjectId (from answers) is already represented in the breakdown
             const originalExamSubject = result.exam?.subjectsIncluded?.find(es => es._id.toString() === subjectId);
-            return originalExamSubject ? originalExamSubject._id.toString() === subjectId : false;
+            return originalExamSubject ? true : false; // If found in exam config, it's already included
         });
 
         if (!isSubjectAlreadyInBreakdown) {
