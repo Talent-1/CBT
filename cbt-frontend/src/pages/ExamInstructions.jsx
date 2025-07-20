@@ -47,7 +47,7 @@ const ExamInstructions = () => {
                 <h2 style={{ color: '#0056b3' }}>General Rules</h2>
                 <ul style={{ listStyleType: 'disc', paddingLeft: '25px' }}>
                     {instructions.map((instruction, index) => (
-                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5', color: 'black' }}>{instruction}</li>
+                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5', color: '#fff' }}>{instruction}</li>
                     ))}
                 </ul>
             </div>
