@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'; // Import useSearchParams
 import { getExamQuestions, submitExam } from '../api/exams';
-import './ExamPage.css'; 
+import '../styles/ExamPage.css'; // Assuming you have a CSS file for styles
 
 function ExamPage() { 
     const { examId } = useParams();
