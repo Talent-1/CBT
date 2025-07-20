@@ -42,18 +42,37 @@ exports.getAllExams = async (req, res) => {
             .populate('branchId', 'name')
             .populate('subjectsIncluded.subjectId', 'name'); // Good: Populating subject name
 
-        const transformedExams = exams.map(exam => ({
-            ...exam.toObject(),
-            subjectsIncluded: exam.subjectsIncluded.map(si => ({
-                ...si.toObject(),
-                subjectName: si.subjectId ? si.subjectId.name : si.subjectName
-            })),
-        }));
+        const transformedExams = exams.map(exam => {
+            console.log("DEBUG(getAllExams): Processing exam:", exam.title, "(ID:", exam._id, ")"); // Debug line
+            const transformedSubjectsIncluded = exam.subjectsIncluded.map(si => {
+                console.log("DEBUG(getAllExams): Current subjectsIncluded entry (si):", si); // Debug line
+                console.log("DEBUG(getAllExams): Type of si.subjectId:", typeof si.subjectId); // Debug line
+                if (si.subjectId && typeof si.subjectId === 'object') { // Check if populated object
+                    console.log("DEBUG(getAllExams): Populated si.subjectId.name:", si.subjectId.name); // Debug line
+                } else {
+                    console.log("DEBUG(getAllExams): si.subjectId is NOT a populated object or is null/undefined:", si.subjectId); // Debug line
+                }
+                console.log("DEBUG(getAllExams): Denormalized si.subjectName (from Exam doc):", si.subjectName); // Debug line
 
+                return {
+                    ...si.toObject(),
+                    // Add a more robust fallback for subjectName to prevent crashes
+                    subjectName: (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.name)
+                                 ? si.subjectId.name // Use populated name if available and valid object
+                                 : (si.subjectName || 'Unknown Subject') // Fallback to denormalized name, then a generic string
+                };
+            });
+            return {
+                ...exam.toObject(),
+                subjectsIncluded: transformedSubjectsIncluded,
+            };
+        });
+
+        console.log(`DEBUG(getAllExams): Successfully transformed ${transformedExams.length} exams.`); // Debug line
         res.status(200).json(transformedExams);
     } catch (error) {
-        console.error("Error in getAllExams:", error);
-        res.status(500).json({ message: 'Server Error fetching exams.' });
+        console.error("CRITICAL ERROR in getAllExams:", error.message); // Improved error logging
+        res.status(500).json({ message: 'Server Error fetching exams.', error: error.message }); // Send error message to frontend
     }
 };
 
@@ -70,6 +89,8 @@ exports.addExam = async (req, res) => {
         if (!req.user || !req.user.id) {
             return res.status(401).json({ message: 'Authentication required to create an exam.' });
         }
+
+        console.log("DEBUG(addExam): Received subjectsIncluded from request body:", subjectsIncluded); // Debug line
 
         const examQuestions = [];
         let totalQuestionsForExam = 0;
@@ -137,6 +158,8 @@ exports.addExam = async (req, res) => {
             // Assign areaOfSpecialization only for senior secondary exams
             areaOfSpecialization: isSeniorSecondaryClass(classLevel) ? areaOfSpecialization : 'N/A',
         });
+
+        console.log("DEBUG(addExam): New Exam object before saving:", newExam); // Debug line
 
         const savedExam = await newExam.save();
 
@@ -215,7 +238,12 @@ exports.getStudentExams = async (req, res) => {
             _id: exam._id,
             title: exam.title,
             // 🐛 POTENTIAL ISSUE HERE: If subjectsIncluded is empty/missing, .map() will fail or return empty
-            subject: exam.subjectsIncluded.map(si => si.subjectId ? si.subjectId.name : si.subjectName).join(', '),
+            // Use the same robust logic as in getAllExams
+            subject: exam.subjectsIncluded.map(si => {
+                return (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.name)
+                       ? si.subjectId.name
+                       : (si.subjectName || 'Unknown Subject');
+            }).join(', '),
             classLevel: exam.classLevel,
             duration: exam.duration,
             totalQuestions: exam.totalQuestionsCount,
@@ -235,12 +263,7 @@ exports.getStudentExams = async (req, res) => {
 exports.getExamQuestions = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.examId)
-            // Populate subjectsIncluded.subjectId to get subject name
-            // Add 'numberOfQuestions' to the select of the direct subjectsIncluded population.
-            // This `populate` is incorrect for what you want. You are *not* populating the `subjectsIncluded` array itself here.
-            // You only populate `questions` array.
-            // For subjectsIncluded, you need a separate populate on `subjectsIncluded.subjectId`.
-            .populate('subjectsIncluded.subjectId', 'name') // <-- Add this!
+            .populate('subjectsIncluded.subjectId', 'name') // <-- Ensure this is present and correct
             .populate({ // This populates the actual questions
                 path: 'questions',
                 model: 'Question',
@@ -252,13 +275,12 @@ exports.getExamQuestions = async (req, res) => {
             });
 
         // 🎯 CRITICAL DEBUGGING LOG:
-        console.log('Backend getExamQuestions: Raw exam object after populate:', exam);
+        console.log('DEBUG(getExamQuestions): Raw exam object after populate:', exam ? exam.toObject() : 'null'); // Debug line
         if (exam && exam.subjectsIncluded) {
-            console.log('Backend getExamQuestions: exam.subjectsIncluded before transformation:', exam.subjectsIncluded);
+            console.log('DEBUG(getExamQuestions): exam.subjectsIncluded before transformation:', exam.subjectsIncluded); // Debug line
         } else {
-            console.log('Backend getExamQuestions: exam or exam.subjectsIncluded is missing/null/undefined.');
+            console.log('DEBUG(getExamQuestions): exam or exam.subjectsIncluded is missing/null/undefined.'); // Debug line
         }
-
 
         if (!exam) {
             return res.status(404).json({ message: 'Exam not found' });
@@ -292,10 +314,9 @@ exports.getExamQuestions = async (req, res) => {
             } else {
                 // Fallback if subjectId is not populated (shouldn't happen with the added .populate)
                 // or if it's somehow malformed in the DB.
-                // In this case, `si` itself is the subdocument with subjectId (as ObjectId) and numberOfQuestions.
-                console.warn(`Backend: subjectsIncluded sub-document might not be fully populated for ID: ${si.subjectId || si._id}`);
+                console.warn(`WARN(getExamQuestions): subjectsIncluded sub-document might not be fully populated for ID: ${si.subjectId || si._id}. Falling back.`); // Debug line
                 return {
-                    subjectId: si.subjectId ? si.subjectId.toString() : si._id.toString(), // Fallback to original ID as string
+                    subjectId: si.subjectId ? si.subjectId.toString() : (si._id ? si._id.toString() : 'N/A_ID'), // Fallback to original ID as string
                     subjectName: 'Unknown Subject', // Provide a fallback name
                     numberOfQuestions: si.numberOfQuestions || 0
                 };
@@ -333,11 +354,11 @@ exports.getExamQuestions = async (req, res) => {
         });
 
     } catch (err) {
-        console.error('Error fetching exam questions:', err.message);
+        console.error('CRITICAL ERROR fetching exam questions:', err.message); // Improved error logging
         if (err.kind === 'ObjectId') {
             return res.status(400).json({ message: 'Invalid Exam ID.' });
         }
-        res.status(500).json({ message: 'Server error fetching exam questions.' });
+        res.status(500).json({ message: 'Server error fetching exam questions.', error: err.message }); // Send error message to frontend
     }
 };
 
@@ -455,10 +476,16 @@ exports.updateExam = async (req, res) => {
             return res.status(400).json({ message: 'Invalid Exam ID.' });
         }
         const updateData = req.body;
+
+        console.log("DEBUG(updateExam): Received update data for exam:", updateData); // Debug line
+
         const updatedExam = await Exam.findByIdAndUpdate(examId, updateData, { new: true })
             .populate('createdBy', 'fullName email role')
             .populate('branchId', 'name')
             .populate('subjectsIncluded.subjectId', 'name');
+
+        console.log("DEBUG(updateExam): Updated Exam object after saving and populating:", updatedExam ? updatedExam.toObject() : 'null'); // Debug line
+
         if (!updatedExam) {
             return res.status(404).json({ message: 'Exam not found.' });
         }
