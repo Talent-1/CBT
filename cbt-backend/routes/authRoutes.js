@@ -70,15 +70,15 @@ router.post('/register', async (req, res) => {
 
         const payload = {
             user: {
-                id: user.id, // Mongoose virtual 'id' for _id
-                email: user.email, // <-- ADDED EMAIL HERE
-                fullName: user.fullName, // <-- ADDED FULLNAME HERE (optional but good for req.user)
-                studentId: user.studentId, // <-- ADDED STUDENTID HERE (optional but good for req.user)
+                id: user.id,
+                email: user.email,
+                fullName: user.fullName,
+                studentId: user.studentId,
                 role: user.role,
                 branchId: user.branchId,
                 classLevel: user.classLevel,
                 section: user.section,
-                department: user.department // Include department in payload
+                department: user.department // Correctly included for register
             }
         };
 
@@ -103,7 +103,7 @@ router.post('/register', async (req, res) => {
                         studentId: user.studentId,
                         section: user.section,
                         classLevel: user.classLevel,
-                        department: user.department // Include department in response
+                        department: user.department // Correctly included for response
                     }
                 });
             }
@@ -141,6 +141,10 @@ router.post('/login', async (req, res) => {
     try {
         let user;
 
+        // Ensure that when you find the user, the 'department' field is not excluded.
+        // If your User model uses `select: -department` by default for some operations,
+        // you might need to explicitly include it here if the default select excludes it.
+        // Otherwise, `User.findOne()` will include all fields not explicitly excluded.
         if (identifier && identifier.includes('@')) {
             user = await User.findOne({ email: identifier }).select('+password');
         } else {
@@ -162,13 +166,15 @@ router.post('/login', async (req, res) => {
         const payload = {
             user: {
                 id: user.id, // Mongoose virtual 'id' for _id
-                email: user.email, // <-- ADDED EMAIL HERE
-                fullName: user.fullName, // <-- ADDED FULLNAME HERE (optional but good for req.user)
-                studentId: user.studentId, // <-- ADDED STUDENTID HERE (optional but good for req.user)
+                email: user.email,
+                fullName: user.fullName,
+                studentId: user.studentId,
                 role: user.role,
                 branchId: user.branchId,
                 classLevel: user.classLevel,
-                section: user.section
+                section: user.section,
+                // ⭐ CRITICAL FIX: Add department here for the JWT payload ⭐
+                department: user.department // Make sure to include the department!
             }
         };
 
@@ -184,7 +190,7 @@ router.post('/login', async (req, res) => {
                 res.json({
                     message: 'Login successful',
                     token,
-                    user: {
+                    user: { // Also ensure the response body contains department for frontend state
                         _id: user._id,
                         fullName: user.fullName,
                         email: user.email,
@@ -194,6 +200,7 @@ router.post('/login', async (req, res) => {
                         section: user.section,
                         classLevel: user.classLevel,
                         profilePictureUrl: user.profilePictureUrl,
+                        department: user.department // Include department in response
                     }
                 });
             }
