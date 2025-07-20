@@ -47,7 +47,7 @@ const ExamInstructions = () => {
                 <h2 style={{ color: '#0056b3' }}>General Rules</h2>
                 <ul style={{ listStyleType: 'disc', paddingLeft: '25px' }}>
                     {instructions.map((instruction, index) => (
-                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5' }}>{instruction}</li>
+                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5', color: 'black' }}>{instruction}</li>
                     ))}
                 </ul>
             </div>
@@ -56,7 +56,7 @@ const ExamInstructions = () => {
             {/* MODIFICATION HERE: Changed background color to a much lighter yellow */}
             <div className="malpractice-warning" style={{ marginBottom: '25px', padding: '15px', border: '1px solid #ffd700', borderRadius: '5px', backgroundColor: '#fffbe6' }}> {/* Changed from #fffacd to #fffbe6 */}
                 <h2 style={{ color: '#cc0000', textAlign: 'center' }}>Strict Warning Against Exam Malpractice</h2>
-                <ul style={{ listStyleType: 'none', padding: '0', textAlign: 'left' }}>
+                <ul style={{ listStyleType: 'none', padding: '0', textAlign: 'left', color: 'black' }}>
                     {malpracticeWarnings.map((warning, index) => (
                         <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5' }} dangerouslySetInnerHTML={{ __html: warning }}></li>
                     ))}
@@ -69,7 +69,7 @@ const ExamInstructions = () => {
                 <h2 style={{ color: '#28a745', textAlign: 'center' }}>A Message of Encouragement</h2>
                 <ul style={{ listStyleType: 'none', padding: '0', textAlign: 'left' }}>
                     {encouragement.map((message, index) => (
-                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5' }}>{message}</li>
+                        <li key={index} style={{ marginBottom: '8px', lineHeight: '1.5', color: 'black' }}>{message}</li>
                     ))}
                 </ul>
             </div>
