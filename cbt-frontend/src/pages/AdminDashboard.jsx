@@ -890,7 +890,7 @@ function AdminDashboard() {
                             {availableSubjectsGrouped[newExam.classLevel].map(subject => (
                                 <div key={subject._id} className="subjectItem">
                                     <input type="checkbox" id={`subject-${subject._id}`} checked={!!selectedSubjectsForExam[subject._id]?.isSelected} onChange={(e) => handleSubjectSelectionForExam(subject._id, e.target.checked)} className="checkbox" />
-                                    <label htmlFor={`subject-${subject._id}`} className="checkboxLabel">**{subject.subjectName}**</label> {/* CHANGE MADE HERE */}
+                                    <label htmlFor={`subject-${subject._id}`} className="checkboxLabel"><strong>{subject.subjectName}</strong></label> {/* CHANGE MADE HERE */}
                                     {selectedSubjectsForExam[subject._id]?.isSelected && (
                                         <input type="number" placeholder="Num Qs" value={selectedSubjectsForExam[subject._id]?.numQuestions || ''} onChange={(e) => handleNumQuestionsForSubject(subject._id, e.target.value)} min="0" className="numQuestionsInput" />
                                     )}
@@ -931,8 +931,8 @@ function AdminDashboard() {
                     <select id="questionSubject" name="subject" value={newQuestion.subject} onChange={handleQuestionChange} required className="select" disabled={!newQuestion.classLevel || !availableSubjectsGrouped[newQuestion.classLevel]?.length}>
                         <option value="">{newQuestion.classLevel ? 'Select Subject' : 'Select Class Level First'}</option>
                         {newQuestion.classLevel && availableSubjectsGrouped[newQuestion.classLevel]?.map(subject => (
-                            <option key={subject._id} value={subject._id}>**{subject.subjectName}**</option>
-                        ),)}
+                            <option key={subject._id} value={subject._id}><strong>{subject.subjectName}</strong></option>
+                        ))}
                     </select>
                 </div>
                 <div className="formGroup">
