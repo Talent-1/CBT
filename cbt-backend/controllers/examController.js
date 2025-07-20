@@ -1,4 +1,5 @@
 // cbt-backend/controllers/examController.js
+
 const Exam = require('../models/Exam');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
@@ -179,8 +180,8 @@ exports.getStudentExams = async (req, res) => {
         // Check if the student has made a successful payment
         const isPaymentEligible = await hasSuccessfulPayment(userId);
         if (!isPaymentEligible) {
-             // If not payment eligible, return an empty array of exams
-             return res.json([]);
+            // If not payment eligible, return an empty array of exams
+            return res.json([]);
         }
 
         // Build the base query for exams based on class level and branch
@@ -263,6 +264,22 @@ exports.getExamQuestions = async (req, res) => {
             return res.status(403).json({ message: 'You are not authorized to take this exam.' });
         }
 
+        // --- START: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
+        // Transform subjectsIncluded for frontend consumption:
+        // 1. Ensure subjectId is a string.
+        // 2. Ensure numberOfQuestions is included.
+        const transformedSubjectsIncluded = exam.subjectsIncluded.map(si => {
+            // Check if subjectId is already populated (an object) or still an ObjectId (requires .toString())
+            const subjectIdString = si.subjectId ? si.subjectId.toString() : si._id.toString(); // Fallback to _id if subjectId somehow isn't directly available
+
+            return {
+                subjectId: si.subjectId ? si.subjectId._id.toString() : si._id.toString(), // Convert ObjectId to string
+                subjectName: si.subjectId ? si.subjectId.name : si.subjectName, // Use populated name or original
+                numberOfQuestions: si.numberOfQuestions // Include numberOfQuestions
+            };
+        });
+        // --- END: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
+
         // Transform questions for the frontend (remove correct answers)
         const questionsToSend = exam.questions.map(q => {
             const transformedQuestion = {
@@ -286,10 +303,8 @@ exports.getExamQuestions = async (req, res) => {
                 classLevel: exam.classLevel,
                 duration: exam.duration,
                 totalQuestions: exam.totalQuestionsCount,
-                subjectsIncluded: exam.subjectsIncluded.map(si => ({
-                    subjectId: si.subjectId ? si.subjectId._id : null,
-                    subjectName: si.subjectId ? si.subjectId.name : si.subjectName
-                }))
+                areaOfSpecialization: exam.areaOfSpecialization, // Include areaOfSpecialization
+                subjectsIncluded: transformedSubjectsIncluded // Use the transformed array
             },
             questions: questionsToSend
         });
