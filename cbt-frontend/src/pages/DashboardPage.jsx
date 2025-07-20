@@ -1,3 +1,4 @@
+// cbt-frontend/src/pages/DashboardPage.jsx
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -13,7 +14,6 @@ function DashboardPage() {
     const [imagePreview, setImagePreview] = useState(null);
     const [uploadMessage, setUploadMessage] = useState('');
     const [examsLoading, setExamsLoading] = useState(true);
-    // NEW: State to hold overall payment status message for the student
     const [overallPaymentStatusMessage, setOverallPaymentStatusMessage] = useState('');
 
     useEffect(() => {
@@ -25,31 +25,25 @@ function DashboardPage() {
         }
     }, [user, loading, navigate]);
 
-    // --- Data Fetching for Student Exams ---
     const fetchUpcomingExams = useCallback(async () => {
         if (!user || user.role !== 'student' || !user.classLevel || !user.branchId) {
             setUpcomingExams([]);
             setExamsLoading(false);
             setOverallPaymentStatusMessage('Your profile is incomplete. Please contact administration to update your class level or branch information.');
-            console.warn('Skipping exam fetch: User not a student or missing classLevel/branchId', { user });
             return;
         }
 
         setExamsLoading(true);
         setError('');
-        setOverallPaymentStatusMessage(''); // Clear previous status messages
+        setOverallPaymentStatusMessage('');
         try {
-            // Pass department for senior secondary students
             let department = undefined;
             if (["SS1", "SS2", "SS3"].includes(user.classLevel)) {
-                department = user.areaOfSpecialization;
+                department = user.department; // Use user.department as per backend fix
             }
-            console.log(`API Call: Fetching upcoming exams for class level: ${user.classLevel}, branch: ${user.branchId}, department: ${department}`);
             const fetchedExams = await getStudentExams(user.classLevel, user.branchId, department);
             setUpcomingExams(fetchedExams);
-            console.log('Fetched Upcoming Exams:', fetchedExams);
 
-            // Determine overall payment eligibility message based on fetched exams
             const requiresPayment = fetchedExams.some(exam => !exam.isPaymentEligibleForExam);
             if (requiresPayment) {
                 setOverallPaymentStatusMessage('Payment Required: You need to settle your outstanding fees to access all exams.');
@@ -75,15 +69,15 @@ function DashboardPage() {
         }
     }, [user, fetchUpcomingExams]);
 
-    // --- Function to handle starting an exam to match ExamPage route ---
+    // Handles navigating to the Exam Instructions page
     const handleStartExam = (examId, isPaymentEligibleForExam) => {
         if (!isPaymentEligibleForExam) {
             setError('You must have a successful payment status to take this exam. Please make a payment or contact administration.');
-            setUploadMessage(''); // Clear upload message if present
-            return; // Prevent navigation
+            setUploadMessage('');
+            return;
         }
-        console.log(`Attempting to start exam with ID: ${examId}`);
-        navigate(`/exam/${examId}`);
+        // Navigate to the ExamInstructions page first
+        navigate(`/exam-instructions/${examId}`);
     };
 
     const handleFileChange = (event) => {
@@ -124,8 +118,8 @@ function DashboardPage() {
         } catch (err) {
             console.error('Photo upload failed:', err);
             const errorMessage = err.response && err.response.data && err.response.data.message
-                               ? err.response.data.message
-                               : 'Failed to upload photo. Please try again.';
+                                 ? err.response.data.message
+                                 : 'Failed to upload photo. Please try again.';
             setError(errorMessage);
             setUploadMessage('');
             setImagePreview(user?.profilePictureUrl || null);
@@ -147,7 +141,6 @@ function DashboardPage() {
 
     return (
         <div className="min-h-screen bg-gray-900 text-gray-100 p-6 flex flex-col items-center justify-center font-inter">
-            {/* Tailwind CSS styling */}
             <style>
                 {`
                 .font-inter {
@@ -224,12 +217,10 @@ function DashboardPage() {
                 }
                 `}
             </style>
-            {/* End of Tailwind CSS styling block */}
 
             <div className="dashboard-container">
                 <h1 className="dashboard-title">Welcome, {user.fullName}!</h1>
                 <div className="user-info">
-                    {/* Profile Picture Section */}
                     <div className="profile-picture-section">
                         <h3>Profile Picture</h3>
                         {imagePreview ? (
@@ -254,10 +245,8 @@ function DashboardPage() {
                             Upload Photo
                         </button>
                         {uploadMessage && <p className="upload-message">{uploadMessage}</p>}
-                        {/* Error from upload is still specific to upload, general error is separate */}
                     </div>
 
-                    {/* Existing User Details */}
                     <p><strong>Role:</strong> {user.role.charAt(0).toUpperCase() + user.role.slice(1)}</p>
                     {user.role === 'student' && (
                         <>
@@ -282,7 +271,6 @@ function DashboardPage() {
                     <div className="dashboard-section mt-8">
                         <h2>Your Upcoming Exams</h2>
 
-                        {/* NEW: Overall Payment Status Message */}
                         {overallPaymentStatusMessage && (
                             <p className={`payment-status-message ${overallPaymentStatusMessage.includes('Payment Required') ? 'payment-status-required' : 'payment-status-cleared'}`}>
                                 {overallPaymentStatusMessage}
@@ -301,11 +289,11 @@ function DashboardPage() {
                                         <p><strong>Subject:</strong> {exam.subject}</p>
                                         <p><strong>Class:</strong> {exam.classLevel}</p>
                                         <p><strong>Duration:</strong> {exam.duration} minutes</p>
-                                        <p><strong>Total Questions:</strong> {exam.totalQuestions}</p> {/* Use exam.totalQuestions directly */}
+                                        <p><strong>Total Questions:</strong> {exam.totalQuestions}</p>
                                         <button
                                             onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam)}
                                             className="start-exam-button"
-                                            disabled={!exam.isPaymentEligibleForExam} // Disable based on backend check
+                                            disabled={!exam.isPaymentEligibleForExam}
                                         >
                                             {exam.isPaymentEligibleForExam ? 'Start Exam' : 'Payment Required'}
                                         </button>
