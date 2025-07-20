@@ -26,7 +26,7 @@ function ResultsPage() {
             setError('No user logged in to view results.');
             setLoading(false);
         }
-    }, [currentUser]); // Depend on currentUser to re-fetch if user changes (e.g., after login/logout)
+    }, []); // Depend on currentUser to re-fetch if user changes (e.g., after login/logout)
 
     if (loading) return <p>Loading results...</p>;
     if (error) return <p className="error-message" style={{ color: 'red' }}>{error}</p>;
