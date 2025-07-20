@@ -19,7 +19,7 @@ const ExamInstructions = () => {
     const malpracticeWarnings = [
         "**WARNING ON EXAM MALPRACTICE:** This exam is designed to assess your individual knowledge and understanding.",
         "Any form of **cheating, collusion, or unauthorized assistance** is strictly prohibited.",
-        "**Consequences (Present):** Engaging in malpractice will lead to immediate disqualification from this exam, invalidation of your results, and potential suspension or expulsion from the school.",
+        "**Consequences (Present):** Engaging in malpractice will lead to immediate disqualification from this exam, invalidation of your results, and potential suspension or expulsion from the platform/school.",
         "**Consequences (Future):** Records of malpractice can negatively impact your academic future, career prospects, and reputation.",
         "**Integrity is Key:** We encourage you to uphold academic integrity. Your honest efforts reflect your true capabilities and foster a fair learning environment for everyone."
     ];
@@ -32,9 +32,7 @@ const ExamInstructions = () => {
 
     const handleStartExam = () => {
         if (examId) {
-            // Navigate to the actual exam page (ExamPage.jsx)
-            // Assuming your route for ExamPage is something like '/exam/:examId'
-            navigate(`/exam/${examId}`);
+            navigate(`/exam/${examId}`); // Assuming your route for ExamPage is '/exam/:examId'
         } else {
             alert("Error: Exam ID is missing. Cannot start exam.");
         }
@@ -55,7 +53,8 @@ const ExamInstructions = () => {
             </div>
             <hr style={{ borderColor: '#eee', margin: '20px 0' }}/>
 
-            <div className="malpractice-warning" style={{ marginBottom: '25px', padding: '15px', border: '1px solid #ffcc00', borderRadius: '5px', backgroundColor: '#fffacd' }}>
+            {/* MODIFICATION HERE: Changed background color to a much lighter yellow */}
+            <div className="malpractice-warning" style={{ marginBottom: '25px', padding: '15px', border: '1px solid #ffd700', borderRadius: '5px', backgroundColor: '#fffbe6' }}> {/* Changed from #fffacd to #fffbe6 */}
                 <h2 style={{ color: '#cc0000', textAlign: 'center' }}>Strict Warning Against Exam Malpractice</h2>
                 <ul style={{ listStyleType: 'none', padding: '0', textAlign: 'left' }}>
                     {malpracticeWarnings.map((warning, index) => (
@@ -65,7 +64,8 @@ const ExamInstructions = () => {
             </div>
             <hr style={{ borderColor: '#eee', margin: '20px 0' }}/>
 
-            <div className="encouragement-message" style={{ marginBottom: '30px', padding: '15px', border: '1px solid #d4edda', borderRadius: '5px', backgroundColor: '#f8f9fa' }}>
+            {/* MODIFICATION HERE: Changed background color to a much lighter green */}
+            <div className="encouragement-message" style={{ marginBottom: '30px', padding: '15px', border: '1px solid #a2e8a2', borderRadius: '5px', backgroundColor: '#e6ffe6' }}> {/* Changed from #f8f9fa to #e6ffe6 */}
                 <h2 style={{ color: '#28a745', textAlign: 'center' }}>A Message of Encouragement</h2>
                 <ul style={{ listStyleType: 'none', padding: '0', textAlign: 'left' }}>
                     {encouragement.map((message, index) => (
@@ -77,9 +77,9 @@ const ExamInstructions = () => {
 
             <div className="action-buttons" style={{ textAlign: 'center', marginTop: '20px' }}>
                 <button
-                    className="btn btn-primary" // Assuming you have some global CSS for btn/btn-primary
+                    className="btn btn-primary"
                     onClick={handleStartExam}
-                    disabled={!examId} // Button is disabled if no examId in URL
+                    disabled={!examId}
                     style={{ padding: '12px 40px', fontSize: '1.3em', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer', transition: 'background-color 0.3s ease' }}
                 >
                     Start Exam
