@@ -322,8 +322,8 @@
 }
 
 .filterControls .select.filterSelect {
-    flex: 1; /* Allow select to grow and fill space */
-    min-width: 150px; /* Ensure a minimum width */
+    flex: 1;
+    min-width: 150px; 
 }
 
 
@@ -451,15 +451,14 @@
         padding: 8px 10px;
     }
     .paymentDetailsCard p strong {
-        min-width: unset; /* Remove min-width on small screens for better wrapping */
-        display: block; /* Make it stack */
+        min-width: unset; 
     }
     .filterControls {
-        flex-direction: column; /* Stack filters vertically on small screens */
+        flex-direction: column; 
         align-items: flex-start;
     }
     .filterControls .select.filterSelect {
-        width: 100%; /* Full width for selects on small screens */
+        width: 100%; 
     }
 }
 
