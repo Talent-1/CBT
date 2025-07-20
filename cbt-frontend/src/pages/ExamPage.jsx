@@ -5,7 +5,7 @@ import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { getExamQuestions, submitExam } from '../api/exams';
 
 // This import path is correct if ExamPage.css is in src/styles/
-import '../styles/ExamPage.css';
+import '../style/ExamPage.css';
 
 function ExamPage() {
     const { examId } = useParams();
