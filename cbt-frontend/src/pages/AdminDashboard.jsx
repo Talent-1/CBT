@@ -1209,7 +1209,6 @@ function AdminDashboard() {
                 )}
             </div>
 
-            {/* Existing Sections Below (if any) */}
             <section className="section">
                 <h2 className="sectionHeader">Exam Overview</h2>
                 <div className="cardGrid">
@@ -1220,7 +1219,7 @@ function AdminDashboard() {
                                 <div className="cardDetail"><strong>Class Level:</strong> {exam.classLevel}</div>
                                 <div className="cardDetail"><strong>Department:</strong> {exam.areaOfSpecialization || 'N/A'}</div>
                                 <div className="cardDetail"><strong>Duration:</strong> {exam.duration} mins</div>
-                                <div className="cardDetail"><strong>Branch:</strong> {renderSafeString(exam.branch.name)}</div>
+                                <div className="cardDetail"><strong>Branch:</strong> {renderSafeString(exam.branch?.name || exam.branchId?.name)}</div>
                                 <div className="cardDetail"><strong>Subjects:</strong> {exam.subjectsIncluded.map(s => `${s.subjectName} (${s.numberOfQuestions})`).join(', ')}</div>
                                 <div className="cardDetail"><strong>Created Date:</strong> {new Date(exam.createdAt).toLocaleDateString()}</div>
                                 <div className="cardActions">
@@ -1336,39 +1335,6 @@ function AdminDashboard() {
                                 <th>Name</th>
                                 <th>Class</th>
                                 <th>Section</th>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
                                 <th>Department</th>
                                 <th>Exam Title</th>
                                 <th>Subject</th>
