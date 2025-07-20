@@ -3,34 +3,27 @@ const Exam = require('../models/Exam');
 const Payment = require('../models/Payment');
 const User = require('../models/User');
 const Question = require('../models/Question');
-const Subject = require('../models/Subject'); // Correct path
+const Subject = require('../models/Subject');
 const Result = require('../models/Result');
-const mongoose = require('mongoose'); // Import mongoose for ObjectId validation
+const mongoose = require('mongoose');
 
-
-// --- Helper function to check if a student has a successful payment ---
-async function hasSuccessfulPayment(userId, classLevel, branchId) {
+async function hasSuccessfulPayment(userId) {
     try {
         const recentSuccessfulPayment = await Payment.findOne({
             student: userId,
             status: 'successful',
         }).sort({ paymentDate: -1 });
-
         return !!recentSuccessfulPayment;
     } catch (error) {
         console.error(`Error checking successful payment for user ${userId}:`, error);
         return false;
     }
 }
-// --- END Helper function ---
 
-
-// Helper function to check if a class level is senior secondary
 function isSeniorSecondaryClass(classLevel) {
     return ['SS1', 'SS2', 'SS3'].includes(classLevel);
 }
 
-// Example: Get all exams
 exports.getAllExams = async (req, res) => {
     try {
         let query = {};
@@ -58,72 +51,48 @@ exports.getAllExams = async (req, res) => {
     }
 };
 
-// Example: Add a new exam (Super Admin Only)
 exports.addExam = async (req, res) => {
-    console.log('DEBUG (addExam): Received request body:', JSON.stringify(req.body, null, 2)); // Detailed log
-
     const { title, classLevel, duration, branchId, subjectsIncluded, areaOfSpecialization } = req.body;
 
     try {
         if (!title || !classLevel || !duration || !branchId || !subjectsIncluded || subjectsIncluded.length === 0) {
-            console.error('DEBUG (addExam): Validation Error: Missing required exam fields (title, classLevel, duration, branchId, or subjectsIncluded array is empty).');
             return res.status(400).json({ message: 'Please provide all required exam fields: title, class level, duration, branch ID, and at least one subject.' });
         }
 
         if (!req.user || !req.user.id) {
-            console.error('DEBUG (addExam): Authentication Error: User not found or not authenticated.');
             return res.status(401).json({ message: 'Authentication required to create an exam.' });
         }
-        console.log('DEBUG (addExam): Basic validation passed.');
 
         const examQuestions = [];
         let totalQuestionsForExam = 0;
 
         for (const subjData of subjectsIncluded) {
-            const { subjectId } = subjData; // Destructure subjectId
-            let { numberOfQuestions } = subjData; // Destructure numberOfQuestions (will be modified)
-
-            console.log(`DEBUG (addExam - loop start): Initial: subjectId=${subjectId}, numberOfQuestions=${numberOfQuestions}, Type: ${typeof numberOfQuestions}`); // Initial loop log
+            const { subjectId } = subjData;
+            let { numberOfQuestions } = subjData;
 
             if (!subjectId) {
-                console.error(`DEBUG (addExam): Validation Error: Missing subjectId in subject entry: ${JSON.stringify(subjData)}`);
                 return res.status(400).json({ message: 'Each included subject must have a subjectId.' });
             }
 
-            // --- FORCE PARSEINT FOR numberOfQuestions IN BACKEND ---
             const parsedNumQuestions = parseInt(numberOfQuestions, 10);
-            console.log(`DEBUG (addExam - loop parse): Parsed: ${parsedNumQuestions}, IsNaN: ${isNaN(parsedNumQuestions)}`);
-
             if (isNaN(parsedNumQuestions) || parsedNumQuestions < 1) {
-                console.error(`DEBUG (addExam): Validation Error: Invalid or missing numberOfQuestions for subjectId ${subjectId}. Value: ${numberOfQuestions} (parsed to ${parsedNumQuestions}), Type: ${typeof numberOfQuestions}. Must be a number >= 1.`);
                 return res.status(400).json({ message: `Each included subject must have a valid number of questions (at least 1). Issue with subject ID: ${subjectId}` });
             }
-            numberOfQuestions = parsedNumQuestions; // Use the parsed, validated number for further operations
-            console.log(`DEBUG (addExam - loop end): After validation: subjectId=${subjectId}, numberOfQuestions=${numberOfQuestions}, Type: ${typeof numberOfQuestions}`);
-            // --- END FORCE PARSEINT AND VALIDATION ---
+            numberOfQuestions = parsedNumQuestions;
 
-            // Validate if subjectId is a valid MongoDB ObjectId
             if (!mongoose.Types.ObjectId.isValid(subjectId)) {
-                console.error(`DEBUG (addExam): Validation Error: Invalid Subject ID format: ${subjectId}`);
                 return res.status(400).json({ message: `Invalid Subject ID format provided for ${subjectId}.` });
             }
 
-            // Verify if the Subject actually exists in the database
             const existingSubject = await Subject.findById(subjectId);
             if (!existingSubject) {
-                console.error(`DEBUG (addExam): Validation Error: Subject with ID ${subjectId} not found.`);
                 return res.status(400).json({ message: `Subject with ID ${subjectId} not found. Please ensure it exists.` });
             }
-            console.log(`DEBUG (addExam): Subject ${existingSubject.name} found for ID: ${subjectId}`);
 
-
-            console.log(`DEBUG (addExam): Querying for questions: { subject: ${subjectId}, classLevel: ${classLevel} }`);
             const availableQuestions = await Question.find({
                 subject: subjectId,
                 classLevel: classLevel
             });
-            console.log(`DEBUG (addExam): Found ${availableQuestions.length} available questions for subject ${subjectId} and class level ${classLevel}.`);
-
 
             const selectedSubjQuestions = availableQuestions
                 .sort(() => 0.5 - Math.random())
@@ -131,7 +100,7 @@ exports.addExam = async (req, res) => {
                 .map(q => q._id);
 
             if (selectedSubjQuestions.length < numberOfQuestions) {
-                console.warn(`DEBUG (addExam): Warning: Not enough questions found for subject ${existingSubject.name} (ID: ${subjectId}) and class level ${classLevel}. Requested ${numberOfQuestions}, found ${selectedSubjQuestions.length}.`);
+                console.warn(`Warning: Not enough questions found for subject ${existingSubject.name} (ID: ${subjectId}) and class level ${classLevel}. Requested ${numberOfQuestions}, found ${selectedSubjQuestions.length}.`);
             }
 
             examQuestions.push(...selectedSubjQuestions);
@@ -139,10 +108,8 @@ exports.addExam = async (req, res) => {
         }
 
         if (examQuestions.length === 0) {
-            console.error('DEBUG (addExam): Validation Error: No questions found for selected subjects and class level after processing all subjects. This might be due to insufficient questions in the question bank.');
             return res.status(400).json({ message: 'No questions could be found for the selected subjects and class level. Please ensure questions exist for these subjects and class level.' });
         }
-        console.log(`DEBUG (addExam): Total questions collected for exam: ${totalQuestionsForExam}`);
 
         const newExam = new Exam({
             title,
@@ -150,38 +117,31 @@ exports.addExam = async (req, res) => {
             duration: parseInt(duration),
             branchId,
             createdBy: req.user.id,
-            subjectsIncluded: subjectsIncluded, // Frontend sends this, already validated
-            questions: examQuestions, // Array of ObjectIds of selected questions
-            totalQuestionsCount: totalQuestionsForExam, // Calculated based on actual questions
-            areaOfSpecialization: isSeniorSecondaryClass(classLevel) ? areaOfSpecialization : 'N/A', // Save department if senior
+            subjectsIncluded: subjectsIncluded,
+            questions: examQuestions,
+            totalQuestionsCount: totalQuestionsForExam,
+            areaOfSpecialization: isSeniorSecondaryClass(classLevel) ? areaOfSpecialization : 'N/A',
         });
-        console.log('DEBUG (addExam): New Exam object created, attempting to save:', newExam);
 
         const savedExam = await newExam.save();
-        console.log('DEBUG (addExam): New Exam saved successfully. ID:', savedExam._id);
 
         const populatedExam = await Exam.findById(savedExam._id)
             .populate('createdBy', 'fullName email')
             .populate('branchId', 'name')
             .populate('subjectsIncluded.subjectId', 'name');
-        console.log('DEBUG (addExam): Exam populated successfully.');
 
         res.status(201).json({ message: 'Exam created successfully', exam: populatedExam });
 
     } catch (err) {
-        console.error('DEBUG (addExam): Error caught in addExam controller:', err);
+        console.error('Error caught in addExam controller:', err);
         if (err.name === 'ValidationError') {
             const messages = Object.values(err.errors).map(val => val.message);
-            console.error('DEBUG (addExam): Mongoose Validation Error details:', messages);
             return res.status(400).json({ message: `Validation Error: ${messages.join(', ')}` });
         }
         res.status(500).json({ message: 'Server error while creating exam.', error: err.message });
     }
 };
 
-// @route   GET /api/exams/student-exams
-// @desc    Get exams for a specific student's class level and branch, WITH PAYMENT ELIGIBILITY
-// @access  Private (Student-specific)
 exports.getStudentExams = async (req, res) => {
     try {
         const studentUser = req.user;
@@ -191,7 +151,6 @@ exports.getStudentExams = async (req, res) => {
         }
 
         const { classLevel, branchId, areaOfSpecialization, id: userId } = studentUser;
-        // Accept department from query param as fallback (for API flexibility)
         const department = req.query.department || areaOfSpecialization;
 
         if (!classLevel || !branchId) {
@@ -199,22 +158,35 @@ exports.getStudentExams = async (req, res) => {
             return res.status(400).json({ message: 'Class level and Branch ID are required to fetch exams for this student.' });
         }
 
-        const isPaymentEligible = await hasSuccessfulPayment(userId, classLevel, branchId);
+        const isPaymentEligible = await hasSuccessfulPayment(userId); // Removed classLevel, branchId as they are not used in hasSuccessfulPayment
         console.log(`DEBUG: Student ${studentUser.fullName} (ID: ${userId}) is payment eligible: ${isPaymentEligible}`);
 
-        // Build query
-        const query = { classLevel: classLevel, branchId: branchId };
+        const query = {
+            classLevel: classLevel,
+            branchId: branchId
+        };
+
         if (isSeniorSecondaryClass(classLevel)) {
-            // Only filter by department for senior classes
             if (department) {
                 query.areaOfSpecialization = department;
+                console.log(`Backend: Filtering exams for senior class ${classLevel} by department: ${department}`);
             } else {
-                // If department is missing, do not show any senior exams
-                query.areaOfSpecialization = { $ne: null };
+                // If senior secondary student has no department, they should not see departmental exams.
+                // Assuming senior exams always have areaOfSpecialization set to a specific department string.
+                // We set it to a value that won't match any actual department.
+                // This ensures that if a senior student has no department, they don't see exams
+                // that are explicitly set for "Sciences", "Arts", or "Commercial".
+                query.areaOfSpecialization = null; // Or a specific non-matching string like 'NO_DEPARTMENT_MATCH'
+                console.warn(`Backend: Senior student ${studentUser.fullName} (${userId}) has no areaOfSpecialization. Filtering for exams with areaOfSpecialization: null.`);
             }
+        } else {
+            // For non-senior secondary students, only show exams where areaOfSpecialization is 'N/A'
+            // (as set by the addExam controller for non-senior exams).
+            query.areaOfSpecialization = 'N/A';
+            console.log(`Backend: Filtering exams for non-senior class ${classLevel} by areaOfSpecialization: 'N/A'`);
         }
 
-        console.log('Backend: Fetching student exams with query:', query);
+        console.log('Backend: Final query for student exams:', query);
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName')
             .populate('branchId', 'name')
@@ -228,6 +200,7 @@ exports.getStudentExams = async (req, res) => {
             duration: exam.duration,
             totalQuestions: exam.totalQuestionsCount,
             isPaymentEligibleForExam: isPaymentEligible,
+            areaOfSpecialization: exam.areaOfSpecialization // Include for debugging/display
         }));
 
         console.log(`Backend: Found ${transformedExams.length} exams for class level: ${classLevel}, branchId: ${branchId}, department: ${department}`);
@@ -239,9 +212,6 @@ exports.getStudentExams = async (req, res) => {
     }
 };
 
-// @route   GET /api/exams/:examId/questions
-// @desc    Get questions for a specific exam - ADD PAYMENT CHECK HERE TOO!
-// @access  Private (Students taking the exam)
 exports.getExamQuestions = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.examId)
@@ -262,7 +232,7 @@ exports.getExamQuestions = async (req, res) => {
         const studentUser = req.user;
         const { classLevel, branchId, id: userId } = studentUser;
 
-        const isPaymentEligible = await hasSuccessfulPayment(userId, classLevel, branchId);
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
         if (!isPaymentEligible) {
             console.warn(`DEBUG: Student ${studentUser.fullName} (ID: ${userId}) is NOT payment eligible for exam ${exam.title}. Access denied.`);
             return res.status(403).json({ message: 'Payment required to take this exam. Please ensure your fees are paid.' });
@@ -273,9 +243,6 @@ exports.getExamQuestions = async (req, res) => {
             (exam.branchId && exam.branchId.toString() !== studentUser.branchId.toString())) {
             return res.status(403).json({ message: 'You are not authorized to take this exam.' });
         }
-
-        console.log('Backend DEBUG: Fetched Exam for questions:', exam.title);
-        console.log('Backend DEBUG: Number of questions populated for exam:', exam.questions.length);
 
         const questionsToSend = exam.questions.map(q => {
             const transformedQuestion = {
@@ -290,12 +257,6 @@ exports.getExamQuestions = async (req, res) => {
             });
             return transformedQuestion;
         });
-
-        console.log('Backend: Sending exam questions for examId:', exam._id);
-        console.log('Backend: Questions count:', questionsToSend.length);
-        if (questionsToSend.length > 0) {
-            console.log('Backend DEBUG: First transformed question sent to frontend:', questionsToSend[0]);
-        }
 
         res.json({
             exam: {
@@ -322,9 +283,6 @@ exports.getExamQuestions = async (req, res) => {
     }
 };
 
-// @route   POST /api/exams/:examId/submit
-// @desc    Submit an exam
-// @access  Private (Student)
 exports.submitExam = async (req, res) => {
     try {
         const { examId } = req.params;
@@ -343,7 +301,7 @@ exports.submitExam = async (req, res) => {
         const studentUser = req.user;
         const { classLevel, branchId } = studentUser;
 
-        const isPaymentEligible = await hasSuccessfulPayment(userId, classLevel, branchId);
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
         if (!isPaymentEligible) {
             console.warn(`DEBUG: Student ${studentUser.fullName} (ID: ${userId}) is NOT payment eligible for exam ${exam.title}. Submission denied.`);
             return res.status(403).json({ message: 'Payment required to submit this exam. Please ensure your fees are paid.' });
@@ -411,9 +369,6 @@ exports.submitExam = async (req, res) => {
     }
 };
 
-// @route   DELETE /api/exams/:examId
-// @desc    Delete an exam
-// @access  Private (Admin only)
 exports.deleteExam = async (req, res) => {
     try {
         const { examId } = req.params;
@@ -431,9 +386,6 @@ exports.deleteExam = async (req, res) => {
     }
 };
 
-// @route   PUT /api/exams/:examId
-// @desc    Update an exam
-// @access  Private (Admin only)
 exports.updateExam = async (req, res) => {
     try {
         const { examId } = req.params;
