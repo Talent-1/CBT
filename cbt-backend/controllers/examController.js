@@ -40,7 +40,7 @@ exports.getAllExams = async (req, res) => {
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName email role')
             .populate('branchId', 'name')
-            .populate('subjectsIncluded.subjectId', 'name');
+            .populate('subjectsIncluded.subjectId', 'name'); // Good: Populating subject name
 
         const transformedExams = exams.map(exam => ({
             ...exam.toObject(),
@@ -131,7 +131,7 @@ exports.addExam = async (req, res) => {
             duration: parseInt(duration),
             branchId,
             createdBy: req.user.id,
-            subjectsIncluded: subjectsIncluded,
+            subjectsIncluded: subjectsIncluded, // subjectsIncluded from req.body is an array of { subjectId, numberOfQuestions }
             questions: examQuestions,
             totalQuestionsCount: totalQuestionsForExam,
             // Assign areaOfSpecialization only for senior secondary exams
@@ -144,7 +144,7 @@ exports.addExam = async (req, res) => {
         const populatedExam = await Exam.findById(savedExam._id)
             .populate('createdBy', 'fullName email')
             .populate('branchId', 'name')
-            .populate('subjectsIncluded.subjectId', 'name');
+            .populate('subjectsIncluded.subjectId', 'name'); // Good: Populating subject name
 
         res.status(201).json({ message: 'Exam created successfully', exam: populatedExam });
 
@@ -208,12 +208,13 @@ exports.getStudentExams = async (req, res) => {
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName')
             .populate('branchId', 'name')
-            .populate('subjectsIncluded.subjectId', 'name');
+            .populate('subjectsIncluded.subjectId', 'name'); // Good: Populating subject name
 
         // Transform exam data for the frontend
         const transformedExams = exams.map(exam => ({
             _id: exam._id,
             title: exam.title,
+            // 🐛 POTENTIAL ISSUE HERE: If subjectsIncluded is empty/missing, .map() will fail or return empty
             subject: exam.subjectsIncluded.map(si => si.subjectId ? si.subjectId.name : si.subjectName).join(', '),
             classLevel: exam.classLevel,
             duration: exam.duration,
@@ -234,7 +235,13 @@ exports.getStudentExams = async (req, res) => {
 exports.getExamQuestions = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.examId)
-            .populate({
+            // Populate subjectsIncluded.subjectId to get subject name
+            // Add 'numberOfQuestions' to the select of the direct subjectsIncluded population.
+            // This `populate` is incorrect for what you want. You are *not* populating the `subjectsIncluded` array itself here.
+            // You only populate `questions` array.
+            // For subjectsIncluded, you need a separate populate on `subjectsIncluded.subjectId`.
+            .populate('subjectsIncluded.subjectId', 'name') // <-- Add this!
+            .populate({ // This populates the actual questions
                 path: 'questions',
                 model: 'Question',
                 populate: {
@@ -243,6 +250,15 @@ exports.getExamQuestions = async (req, res) => {
                     select: 'name'
                 }
             });
+
+        // 🎯 CRITICAL DEBUGGING LOG:
+        console.log('Backend getExamQuestions: Raw exam object after populate:', exam);
+        if (exam && exam.subjectsIncluded) {
+            console.log('Backend getExamQuestions: exam.subjectsIncluded before transformation:', exam.subjectsIncluded);
+        } else {
+            console.log('Backend getExamQuestions: exam or exam.subjectsIncluded is missing/null/undefined.');
+        }
+
 
         if (!exam) {
             return res.status(404).json({ message: 'Exam not found' });
@@ -265,18 +281,25 @@ exports.getExamQuestions = async (req, res) => {
         }
 
         // --- START: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
-        // Transform subjectsIncluded for frontend consumption:
-        // 1. Ensure subjectId is a string.
-        // 2. Ensure numberOfQuestions is included.
         const transformedSubjectsIncluded = exam.subjectsIncluded.map(si => {
-            // Check if subjectId is already populated (an object) or still an ObjectId (requires .toString())
-            const subjectIdString = si.subjectId ? si.subjectId.toString() : si._id.toString(); // Fallback to _id if subjectId somehow isn't directly available
-
-            return {
-                subjectId: si.subjectId ? si.subjectId._id.toString() : si._id.toString(), // Convert ObjectId to string
-                subjectName: si.subjectId ? si.subjectId.name : si.subjectName, // Use populated name or original
-                numberOfQuestions: si.numberOfQuestions // Include numberOfQuestions
-            };
+            // Check if subjectId is populated (an object)
+            if (si.subjectId && typeof si.subjectId === 'object' && si.subjectId._id) {
+                return {
+                    subjectId: si.subjectId._id.toString(), // Get _id from populated object
+                    subjectName: si.subjectId.name, // Get name from populated object
+                    numberOfQuestions: si.numberOfQuestions // This should already be part of the `subjectsIncluded` sub-document
+                };
+            } else {
+                // Fallback if subjectId is not populated (shouldn't happen with the added .populate)
+                // or if it's somehow malformed in the DB.
+                // In this case, `si` itself is the subdocument with subjectId (as ObjectId) and numberOfQuestions.
+                console.warn(`Backend: subjectsIncluded sub-document might not be fully populated for ID: ${si.subjectId || si._id}`);
+                return {
+                    subjectId: si.subjectId ? si.subjectId.toString() : si._id.toString(), // Fallback to original ID as string
+                    subjectName: 'Unknown Subject', // Provide a fallback name
+                    numberOfQuestions: si.numberOfQuestions || 0
+                };
+            }
         });
         // --- END: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
 
