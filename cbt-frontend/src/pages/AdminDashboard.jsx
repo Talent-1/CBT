@@ -847,112 +847,112 @@ function AdminDashboard() {
             )}
 
             {authUser.role === 'admin' && (
-                <>
-                    <section className="section">
-                        <h2 className="sectionHeader">Add New Unit Exam</h2>
-                        <form onSubmit={handleAddExam} className="form">
-                            <div className="formGroup">
-                                <label htmlFor="examTitle" className="label">Exam Title:</label>
-                                <input type="text" id="examTitle" name="title" value={newExam.title} onChange={handleExamChange} required className="input" />
-                            </div>
-                            <div className="formGroup">
-                                <label htmlFor="examClassLevel" className="label">Target Class Level:</label>
-                                <select id="examClassLevel" name="classLevel" value={newExam.classLevel} onChange={handleExamChange} required className="select">
-                                    <option value="">Select Class Level</option>
-                                    {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
-                                </select>
-                            </div>
+    <>
+        <section className="section">
+            <h2 className="sectionHeader">Add New Unit Exam</h2>
+            <form onSubmit={handleAddExam} className="form">
+                <div className="formGroup">
+                    <label htmlFor="examTitle" className="label">Exam Title:</label>
+                    <input type="text" id="examTitle" name="title" value={newExam.title} onChange={handleExamChange} required className="input" />
+                </div>
+                <div className="formGroup">
+                    <label htmlFor="examClassLevel" className="label">Target Class Level:</label>
+                    <select id="examClassLevel" name="classLevel" value={newExam.classLevel} onChange={handleExamChange} required className="select">
+                        <option value="">Select Class Level</option>
+                        {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
+                    </select>
+                </div>
 
-                            {/* Department selection for senior secondary exams */}
-                            {newExam.classLevel && isSeniorSecondaryClass(newExam.classLevel) && (
-                                <div className="formGroup">
-                                    <label htmlFor="examDepartment" className="label">Department:</label>
-                                    <select
-                                        id="examDepartment"
-                                        name="areaOfSpecialization" // Match backend field name
-                                        value={newExam.areaOfSpecialization}
-                                        onChange={handleExamChange}
-                                        required // Make required for senior secondary classes
-                                        className="select"
-                                    >
-                                        <option value="">Select Department</option>
-                                        {DEPARTMENTS.map(dept => (
-                                            <option key={dept} value={dept}>{dept}</option>
-                                        ))}
-                                    </select>
+                {/* Department selection for senior secondary exams */}
+                {newExam.classLevel && isSeniorSecondaryClass(newExam.classLevel) && (
+                    <div className="formGroup">
+                        <label htmlFor="examDepartment" className="label">Department:</label>
+                        <select
+                            id="examDepartment"
+                            name="areaOfSpecialization" // Match backend field name
+                            value={newExam.areaOfSpecialization}
+                            onChange={handleExamChange}
+                            required // Make required for senior secondary classes
+                            className="select"
+                        >
+                            <option value="">Select Department</option>
+                            {DEPARTMENTS.map(dept => (
+                                <option key={dept} value={dept}>{dept}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+
+                {newExam.classLevel && availableSubjectsGrouped[newExam.classLevel] && (
+                    <div className="formGroup">
+                        <h3 className="subHeader">Select Subjects for this Exam:</h3>
+                        <div className="subjectGrid">
+                            {availableSubjectsGrouped[newExam.classLevel].map(subject => (
+                                <div key={subject._id} className="subjectItem">
+                                    <input type="checkbox" id={`subject-${subject._id}`} checked={!!selectedSubjectsForExam[subject._id]?.isSelected} onChange={(e) => handleSubjectSelectionForExam(subject._id, e.target.checked)} className="checkbox" />
+                                    <label htmlFor={`subject-${subject._id}`} className="checkboxLabel">**{subject.subjectName}**</label> {/* CHANGE MADE HERE */}
+                                    {selectedSubjectsForExam[subject._id]?.isSelected && (
+                                        <input type="number" placeholder="Num Qs" value={selectedSubjectsForExam[subject._id]?.numQuestions || ''} onChange={(e) => handleNumQuestionsForSubject(subject._id, e.target.value)} min="0" className="numQuestionsInput" />
+                                    )}
                                 </div>
-                            )}
+                            ))}
+                        </div>
+                    </div>
+                )}
+                <div className="formGroup">
+                    <label htmlFor="duration" className="label">Common Duration (Minutes):</label>
+                    <input type="number" id="duration" name="duration" value={newExam.duration} onChange={handleExamChange} required className="input" min="1" />
+                </div>
+                <div className="formGroup">
+                    <label htmlFor="examBranch" className="label">Branch:</label>
+                    <select id="examBranch" name="branchId" value={newExam.branchId} onChange={handleExamChange} required className="select" disabled={branches.length === 0}>
+                        <option value="">{dataLoading ? 'Loading Branches...' : 'Select Branch'}</option>
+                        {branches.map(branch => (<option key={branch._id} value={branch._id}>{branch.name}</option>))}
+                    </select>
+                </div>
+                <button type="submit" className="submitButton">Create Unit Exam</button>
+            </form>
+        </section>
 
-                            {newExam.classLevel && availableSubjectsGrouped[newExam.classLevel] && (
-                                <div className="formGroup">
-                                    <h3 className="subHeader">Select Subjects for this Exam:</h3>
-                                    <div className="subjectGrid">
-                                        {availableSubjectsGrouped[newExam.classLevel].map(subject => (
-                                            <div key={subject._id} className="subjectItem">
-                                                <input type="checkbox" id={`subject-${subject._id}`} checked={!!selectedSubjectsForExam[subject._id]?.isSelected} onChange={(e) => handleSubjectSelectionForExam(subject._id, e.target.checked)} className="checkbox" />
-                                                <label htmlFor={`subject-${subject._id}`} className="checkboxLabel">{subject.name}</label>
-                                                {selectedSubjectsForExam[subject._id]?.isSelected && (
-                                                    <input type="number" placeholder="Num Qs" value={selectedSubjectsForExam[subject._id]?.numQuestions || ''} onChange={(e) => handleNumQuestionsForSubject(subject._id, e.target.value)} min="0" className="numQuestionsInput" />
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                            <div className="formGroup">
-                                <label htmlFor="duration" className="label">Common Duration (Minutes):</label>
-                                <input type="number" id="duration" name="duration" value={newExam.duration} onChange={handleExamChange} required className="input" min="1" />
-                            </div>
-                            <div className="formGroup">
-                                <label htmlFor="examBranch" className="label">Branch:</label>
-                                <select id="examBranch" name="branchId" value={newExam.branchId} onChange={handleExamChange} required className="select" disabled={branches.length === 0}>
-                                    <option value="">{dataLoading ? 'Loading Branches...' : 'Select Branch'}</option>
-                                    {branches.map(branch => (<option key={branch._id} value={branch._id}>{branch.name}</option>))}
-                                </select>
-                            </div>
-                            <button type="submit" className="submitButton">Create Unit Exam</button>
-                        </form>
-                    </section>
+        <section className="section">
+            <h2 className="sectionHeader">Add New Question to Bank</h2>
+            <form onSubmit={handleAddQuestion} className="form">
+                <div className="formGroup">
+                    <label htmlFor="questionClassLevel" className="label">Class Level:</label>
+                    <select id="questionClassLevel" name="classLevel" value={newQuestion.classLevel} onChange={handleQuestionChange} required className="select">
+                        <option value="">Select Class Level</option>
+                        {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
+                    </select>
+                </div>
 
-                    <section className="section">
-                        <h2 className="sectionHeader">Add New Question to Bank</h2>
-                        <form onSubmit={handleAddQuestion} className="form">
-                            <div className="formGroup">
-                                <label htmlFor="questionClassLevel" className="label">Class Level:</label>
-                                <select id="questionClassLevel" name="classLevel" value={newQuestion.classLevel} onChange={handleQuestionChange} required className="select">
-                                    <option value="">Select Class Level</option>
-                                    {CLASS_LEVELS.map(level => (<option key={level} value={level}>{level}</option>))}
-                                </select>
-                            </div>
-
-                            {/* Question Details */}
-                            <div className="formGroup">
-                                <label htmlFor="questionSubject" className="label">Subject:</label>
-                                <select id="questionSubject" name="subject" value={newQuestion.subject} onChange={handleQuestionChange} required className="select" disabled={!newQuestion.classLevel || !availableSubjectsGrouped[newQuestion.classLevel]?.length}>
-                                    <option value="">{newQuestion.classLevel ? 'Select Subject' : 'Select Class Level First'}</option>
-                                    {newQuestion.classLevel && availableSubjectsGrouped[newQuestion.classLevel]?.map(subject => (
-                                        <option key={subject._id} value={subject._id}>{subject.name}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="formGroup">
-                                <label htmlFor="questionText" className="label">Question Text:</label>
-                                <textarea id="questionText" name="questionText" value={newQuestion.questionText} onChange={handleQuestionChange} required className="textarea"></textarea>
-                            </div>
-                            <div className="formGroup">
-                                <label className="label">Options:</label>
-                                <input type="text" name="optionA" value={newQuestion.optionA} onChange={handleQuestionChange} placeholder="Option A" required className="input" />
-                                <input type="text" name="optionB" value={newQuestion.optionB} onChange={handleQuestionChange} placeholder="Option B" required className="input" />
-                                <input type="text" name="optionC" value={newQuestion.optionC} onChange={handleQuestionChange} placeholder="Option C" required className="input" />
-                                <input type="text" name="optionD" value={newQuestion.optionD} onChange={handleQuestionChange} placeholder="Option D" required className="input" />
-                            </div>
-                            <div className="formGroup">
-                                <label htmlFor="correctOption" className="label">Correct Option (A, B, C, or D):</label>
-                                <input type="text" id="correctOption" name="correctOption" value={newQuestion.correctOption} onChange={handleQuestionChange} maxLength="1" required className="input" />
-                            </div>
-                            <button type="submit" className="submitButton">Add Question</button>
-                        </form>
-                    </section>
+                {/* Question Details */}
+                <div className="formGroup">
+                    <label htmlFor="questionSubject" className="label">Subject:</label>
+                    <select id="questionSubject" name="subject" value={newQuestion.subject} onChange={handleQuestionChange} required className="select" disabled={!newQuestion.classLevel || !availableSubjectsGrouped[newQuestion.classLevel]?.length}>
+                        <option value="">{newQuestion.classLevel ? 'Select Subject' : 'Select Class Level First'}</option>
+                        {newQuestion.classLevel && availableSubjectsGrouped[newQuestion.classLevel]?.map(subject => (
+                            <option key={subject._id} value={subject._id}>**{subject.subjectName}**</option>
+                        ),)}
+                    </select>
+                </div>
+                <div className="formGroup">
+                    <label htmlFor="questionText" className="label">Question Text:</label>
+                    <textarea id="questionText" name="questionText" value={newQuestion.questionText} onChange={handleQuestionChange} required className="textarea"></textarea>
+                </div>
+                <div className="formGroup">
+                    <label className="label">Options:</label>
+                    <input type="text" name="optionA" value={newQuestion.optionA} onChange={handleQuestionChange} placeholder="Option A" required className="input" />
+                    <input type="text" name="optionB" value={newQuestion.optionB} onChange={handleQuestionChange} placeholder="Option B" required className="input" />
+                    <input type="text" name="optionC" value={newQuestion.optionC} onChange={handleQuestionChange} placeholder="Option C" required className="input" />
+                    <input type="text" name="optionD" value={newQuestion.optionD} onChange={handleQuestionChange} placeholder="Option D" required className="input" />
+                </div>
+                <div className="formGroup">
+                    <label htmlFor="correctOption" className="label">Correct Option (A, B, C, or D):</label>
+                    <input type="text" id="correctOption" name="correctOption" value={newQuestion.correctOption} onChange={handleQuestionChange} maxLength="1" required className="input" />
+                </div>
+                <button type="submit" className="submitButton">Add Question</button>
+            </form>
+        </section>
                 </>
             )}
 
