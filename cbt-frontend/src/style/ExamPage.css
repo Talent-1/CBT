@@ -1,0 +1,266 @@
+/* General Exam Page Container */
+.exam-container {
+    text-align: left;
+    max-width: 800px;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: #f7fcf9; /* Very light green/off-white */
+    color: #333; /* Darker text for contrast */
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    border: 1px solid #e0f2e8; /* Light green border */
+}
+
+/* Exam Title */
+.exam-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: #4CAF50; /* Primary green */
+    font-size: 2.2em;
+    font-weight: bold;
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+/* Timer and Question Count Header */
+.exam-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #a8e6cf; /* Light green border */
+    border-radius: 8px;
+    background-color: #e6ffee; /* Very light green background */
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.exam-header h3 {
+    margin: 0;
+    font-size: 1.5em;
+    color: #388e3c; /* Darker green for timer */
+}
+
+.exam-header span {
+    font-size: 1.2em;
+    font-weight: 500;
+    color: #66bb6a; /* Medium green */
+}
+
+/* Subject Selection Dropdown */
+.subject-select-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    border: 1px solid #a8e6cf;
+    border-radius: 8px;
+    background-color: #e6ffee;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.subject-select-container label {
+    margin-right: 10px;
+    font-size: 1.1em;
+    color: #333;
+    white-space: nowrap;
+}
+
+.subject-select-container select {
+    padding: 8px 12px;
+    border-radius: 5px;
+    border: 1px solid #81c784; /* Green border */
+    background-color: #ffffff; /* White background for dropdown */
+    color: #333;
+    font-size: 1em;
+    cursor: pointer;
+    -webkit-appearance: none; /* Remove default browser styling for dropdown */
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2020%2020%22%20fill%3D%22%23333333%22%3E%3Cpath%20fill-rule%3D%22evenodd%22%20d%3D%22M5.293%207.293a1%201%200%20011.414%200L10%2010.586l3.293-3.293a1%201%200%20111.414%201.414l-4%204a1%201%200%2001-1.414%200l-4-4a1%201%200%20010-1.414z%22%20clip-rule%3D%22evenodd%22%2F%3E%3C%2Fsvg%3E"); /* Custom dark grey arrow */
+    background-repeat: no-repeat;
+    background-position: right 0.7em top 50%, 0 0;
+    background-size: 0.65em auto, 100%;
+}
+
+.subject-select-container select:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.4); /* Green focus highlight */
+}
+
+/* Question Navigation Buttons (Grid) */
+.question-nav-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 20px;
+    padding: 10px;
+    border: 1px solid #a8e6cf;
+    border-radius: 8px;
+    background-color: #e6ffee;
+    justify-content: center;
+    max-height: 200px;
+    overflow-y: auto;
+    scrollbar-width: thin; /* For Firefox */
+    scrollbar-color: #66bb6a #e6ffee; /* For Firefox */
+}
+
+/* Scrollbar styling for Webkit browsers (Chrome, Safari, Edge) */
+.question-nav-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+.question-nav-grid::-webkit-scrollbar-track {
+    background: #e6ffee;
+    border-radius: 10px;
+}
+
+.question-nav-grid::-webkit-scrollbar-thumb {
+    background-color: #66bb6a;
+    border-radius: 10px;
+    border: 2px solid #e6ffee;
+}
+
+.question-nav-grid button {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    background-color: #ffccbc; /* Light red/orange for unanswered */
+    color: #333;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: none;
+    transition: background-color 0.3s ease, border 0.3s ease, box-shadow 0.3s ease;
+}
+
+.question-nav-grid button.answered {
+    background-color: #81c784; /* Medium green for answered */
+    color: white;
+}
+
+.question-nav-grid button.current {
+    border-color: #4CAF50; /* Primary green border for current question */
+    box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    transform: scale(1.05);
+}
+
+.question-nav-grid button:hover:not(.current) {
+    background-color: #c8e6c9; /* Lighter green on hover */
+    transform: scale(1.02);
+}
+
+/* Question Content Area */
+.question-content {
+    margin-bottom: 20px;
+    padding: 20px;
+    border: 1px solid #a8e6cf;
+    border-radius: 10px;
+    background-color: #f0f7f2; /* Lightest green for question block */
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.question-content p {
+    font-size: 1.3em;
+    margin-bottom: 20px;
+    line-height: 1.6;
+    color: #333;
+}
+
+/* Options List */
+.options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.options-list label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    background-color: transparent;
+    padding: 12px 15px;
+    border-radius: 8px;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.options-list label:hover {
+    background-color: #e0f2e8; /* Light green hover background */
+    border-color: #81c784; /* Green highlight border on hover */
+}
+
+.options-list label input[type="radio"] {
+    transform: scale(1.3);
+    accent-color: #4CAF50; /* Primary green for checked radio */
+    min-width: 20px;
+    min-height: 20px;
+}
+
+.options-list label span {
+    font-size: 1.15em;
+    color: #333;
+}
+
+.options-list label.selected-option {
+    background-color: #c8e6c9; /* Light green for selected option */
+    border-color: #4CAF50; /* Primary green border for selected option */
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Navigation Buttons (Prev/Next/Submit) */
+.nav-buttons {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 30px;
+}
+
+.nav-buttons button {
+    padding: 12px 25px;
+    font-size: 1.1em;
+    cursor: pointer;
+    border-radius: 8px;
+    border: none;
+    font-weight: bold;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    color: white; /* Text color for buttons */
+}
+
+.nav-buttons button:disabled {
+    background-color: #bdbdbd; /* Light grey for disabled buttons */
+    cursor: not-allowed;
+    opacity: 0.7;
+    color: #616161;
+}
+
+.nav-buttons button:not(:disabled):hover {
+    transform: translateY(-2px);
+}
+
+.nav-buttons button:first-child { /* Previous button */
+    background-color: #66bb6a; /* Medium green */
+}
+
+.nav-buttons button:first-child:hover:not(:disabled) {
+    background-color: #388e3c; /* Darker green on hover */
+}
+
+.nav-buttons button:last-child { /* Next/Submit button */
+    background-color: #66bb6a; /* Default medium green for Next */
+}
+
+/* Specific styling for the Submit button */
+.nav-buttons button.submit-button {
+    background-color: #4CAF50; /* Primary green for Submit */
+}
+
+.nav-buttons button.submit-button:hover:not(:disabled) {
+    background-color: #388e3c; /* Darker primary green on hover */
+}
