@@ -1,16 +1,38 @@
+// cbt-backend/controllers/examController.js
+
 const Exam = require('../models/Exam');
-const User = require('../models/User'); // Assuming User model is needed for exam creation/linking
-const Subject = require('../models/Subject'); // Assuming Subject model is needed for subject validation
-const Question = require('../models/Question'); // Assuming Question model is needed for question validation/population
+const Payment = require('../models/Payment');
+const User = require('../models/User');
+const Question = require('../models/Question');
+const Subject = require('../models/Subject');
+const Result = require('../models/Result');
 const mongoose = require('mongoose');
 
-// @route   GET /api/exams
-// @desc    Get all exams (for admin dashboards)
-// @access  Private (Admin roles)
+// Helper function to check if a student has a successful payment
+async function hasSuccessfulPayment(userId) {
+    try {
+        const recentSuccessfulPayment = await Payment.findOne({
+            student: userId,
+            status: 'successful',
+        }).sort({ paymentDate: -1 });
+
+        return !!recentSuccessfulPayment;
+    } catch (error) {
+        console.error(`Error checking successful payment for user ${userId}:`, error);
+        return false;
+    }
+}
+
+// Helper function to check if a class level is senior secondary
+function isSeniorSecondaryClass(classLevel) {
+    return ['SS1', 'SS2', 'SS3'].includes(classLevel);
+}
+
+// Get all exams (for admin dashboards)
 exports.getAllExams = async (req, res) => {
     try {
         let query = {};
-        // Branch admin filtering logic (if applicable)
+        // Filter exams by branch if the user is a branch_admin
         if (req.user && req.user.role === 'branch_admin' && req.user.branchId) {
             query.branchId = req.user.branchId;
         }
@@ -18,382 +40,458 @@ exports.getAllExams = async (req, res) => {
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName email role')
             .populate('branchId', 'name')
-            // --- MODIFIED: Populating 'subjectName' for subjectsIncluded.subjectId ---
-            .populate('subjectsIncluded.subjectId', 'subjectName');
+            .populate('subjectsIncluded.subjectId', 'subjectName'); // Corrected: subjectName
 
-        // Transform the exams to ensure consistent subjectName for frontend
         const transformedExams = exams.map(exam => {
+            console.log("DEBUG(getAllExams): Processing exam:", exam.title, "(ID:", exam._id, ")"); // Debug line
             const transformedSubjectsIncluded = exam.subjectsIncluded.map(si => {
+                console.log("DEBUG(getAllExams): Current subjectsIncluded entry (si):", si); // Debug line
+                console.log("DEBUG(getAllExams): Type of si.subjectId:", typeof si.subjectId); // Debug line
+                if (si.subjectId && typeof si.subjectId === 'object') { // Check if populated object
+                    console.log("DEBUG(getAllExams): Populated si.subjectId.subjectName:", si.subjectId.subjectName); // Corrected: subjectName
+                } else {
+                    console.log("DEBUG(getAllExams): si.subjectId is NOT a populated object or is null/undefined:", si.subjectId); // Debug line
+                }
+                console.log("DEBUG(getAllExams): Denormalized si.subjectName (from Exam doc):", si.subjectName); // Debug line
+
                 return {
                     ...si.toObject(),
-                    // Use the populated subjectName if available, fallback to a generic message
-                    subjectName: (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName)
-                                 ? si.subjectId.subjectName
-                                 : 'Unknown Subject' // Fallback for cases where population might fail or data is missing
+                    // Add a more robust fallback for subjectName to prevent crashes
+                    subjectName: (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName) // Corrected: subjectName
+                                 ? si.subjectId.subjectName // Use populated subjectName if available and valid object
+                                 : (si.subjectName || 'Unknown Subject') // Fallback to denormalized name, then a generic string
                 };
             });
             return {
-                ...exam.toObject(), // Convert Mongoose document to plain object
+                ...exam.toObject(),
                 subjectsIncluded: transformedSubjectsIncluded,
             };
         });
 
+        console.log(`DEBUG(getAllExams): Successfully transformed ${transformedExams.length} exams.`); // Debug line
         res.status(200).json(transformedExams);
     } catch (error) {
-        console.error("Error in getAllExams:", error);
-        res.status(500).json({ message: 'Server Error fetching exams.' });
+        console.error("CRITICAL ERROR in getAllExams:", error.message); // Improved error logging
+        res.status(500).json({ message: 'Server Error fetching exams.', error: error.message }); // Send error message to frontend
     }
 };
 
-// @route   POST /api/exams
-// @desc    Add a new exam (Super Admin or Branch Admin)
-// @access  Private
+// Add a new exam
 exports.addExam = async (req, res) => {
-    const { title, description, durationMinutes, totalQuestions, classLevel, subjectsIncluded, branchId, examDate, instructions, timeLimitPerQuestion, shuffleQuestions, allowReview, passMark } = req.body;
+    const { title, classLevel, duration, branchId, subjectsIncluded, areaOfSpecialization } = req.body;
 
     try {
-        // Validation (basic checks)
-        if (!title || !durationMinutes || !totalQuestions || !classLevel || !subjectsIncluded || subjectsIncluded.length === 0 || !examDate || !branchId) {
-            return res.status(400).json({ message: 'Please provide all required exam fields.' });
+        // Basic validation for required fields
+        if (!title || !classLevel || !duration || !branchId || !subjectsIncluded || subjectsIncluded.length === 0) {
+            return res.status(400).json({ message: 'Please provide all required exam fields: title, class level, duration, branch ID, and at least one subject.' });
         }
 
-        // Validate subjectsIncluded array structure and IDs
-        for (const item of subjectsIncluded) {
-            if (!item.subjectId || !mongoose.Types.ObjectId.isValid(item.subjectId) || typeof item.numberOfQuestions !== 'number' || item.numberOfQuestions <= 0) {
-                return res.status(400).json({ message: 'Invalid subject included data. Each subject must have a valid subjectId and a positive numberOfQuestions.' });
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ message: 'Authentication required to create an exam.' });
+        }
+
+        console.log("DEBUG(addExam): Received subjectsIncluded from request body:", subjectsIncluded); // Debug line
+
+        const examQuestions = [];
+        let totalQuestionsForExam = 0;
+
+        // Loop through each subject included in the exam
+        for (const subjData of subjectsIncluded) {
+            const { subjectId } = subjData;
+            let { numberOfQuestions } = subjData;
+
+            if (!subjectId) {
+                return res.status(400).json({ message: 'Each included subject must have a subjectId.' });
             }
-            // Optional: Verify subjectId actually exists in the Subject collection
-            const subjectExists = await Subject.findById(item.subjectId);
-            if (!subjectExists) {
-                return res.status(400).json({ message: `Subject with ID ${item.subjectId} not found.` });
+
+            // Ensure numberOfQuestions is a valid positive integer
+            const parsedNumQuestions = parseInt(numberOfQuestions, 10);
+            if (isNaN(parsedNumQuestions) || parsedNumQuestions < 1) {
+                return res.status(400).json({ message: `Each included subject must have a valid number of questions (at least 1). Issue with subject ID: ${subjectId}` });
             }
+            numberOfQuestions = parsedNumQuestions;
+
+            // Validate Subject ID format and existence
+            if (!mongoose.Types.ObjectId.isValid(subjectId)) {
+                return res.status(400).json({ message: `Invalid Subject ID format provided for ${subjectId}.` });
+            }
+            const existingSubject = await Subject.findById(subjectId);
+            if (!existingSubject) {
+                return res.status(400).json({ message: `Subject with ID ${subjectId} not found. Please ensure it exists.` });
+            }
+
+            // Fetch questions for the current subject and class level, then select a random subset
+            const availableQuestions = await Question.find({
+                subject: subjectId,
+                classLevel: classLevel
+            });
+
+            const selectedSubjQuestions = availableQuestions
+                .sort(() => 0.5 - Math.random()) // Randomize order
+                .slice(0, numberOfQuestions) // Select the required number
+                .map(q => q._id);
+
+            // Warn if not enough questions are found
+            if (selectedSubjQuestions.length < numberOfQuestions) {
+                console.warn(`Warning: Not enough questions found for subject ${existingSubject.subjectName} (ID: ${subjectId}) and class level ${classLevel}. Requested ${numberOfQuestions}, found ${selectedSubjQuestions.length}.`); // Corrected: subjectName
+            }
+
+            examQuestions.push(...selectedSubjQuestions);
+            totalQuestionsForExam += selectedSubjQuestions.length;
         }
 
-        // Validate branchId
-        if (!mongoose.Types.ObjectId.isValid(branchId)) {
-            return res.status(400).json({ message: 'Invalid Branch ID format.' });
-        }
-        const branchExists = await Branch.findById(branchId);
-        if (!branchExists) {
-            return res.status(400).json({ message: 'Branch not found.' });
+        // Ensure at least some questions were compiled for the exam
+        if (examQuestions.length === 0) {
+            return res.status(400).json({ message: 'No questions could be found for the selected subjects and class level. Please ensure questions exist for these subjects and class level.' });
         }
 
-        // Check if the user is a branch_admin and if the branchId matches their assigned branchId
-        if (req.user.role === 'branch_admin' && req.user.branchId.toString() !== branchId) {
-            return res.status(403).json({ message: 'You are not authorized to create exams for this branch.' });
-        }
-
+        // Create the new exam document
         const newExam = new Exam({
             title,
-            description,
-            durationMinutes,
-            totalQuestions,
             classLevel,
-            subjectsIncluded,
+            duration: parseInt(duration),
             branchId,
-            examDate,
-            instructions,
-            timeLimitPerQuestion,
-            shuffleQuestions,
-            allowReview,
-            passMark,
-            createdBy: req.user.id // Get user ID from authenticated request
+            createdBy: req.user.id,
+            subjectsIncluded: subjectsIncluded, // subjectsIncluded from req.body is an array of { subjectId, numberOfQuestions }
+            questions: examQuestions,
+            totalQuestionsCount: totalQuestionsForExam,
+            // Assign areaOfSpecialization only for senior secondary exams
+            areaOfSpecialization: isSeniorSecondaryClass(classLevel) ? areaOfSpecialization : 'N/A',
         });
+
+        console.log("DEBUG(addExam): New Exam object before saving:", newExam); // Debug line
 
         const savedExam = await newExam.save();
 
-        // Populate the saved exam for the response
+        // Populate related fields for the response
         const populatedExam = await Exam.findById(savedExam._id)
             .populate('createdBy', 'fullName email')
             .populate('branchId', 'name')
-            // --- MODIFIED: Populating 'subjectName' for subjectsIncluded.subjectId ---
-            .populate('subjectsIncluded.subjectId', 'subjectName');
+            .populate('subjectsIncluded.subjectId', 'subjectName'); // Corrected: subjectName
 
-        res.status(201).json({ message: 'Exam created successfully!', exam: populatedExam });
+        res.status(201).json({ message: 'Exam created successfully', exam: populatedExam });
 
-    } catch (error) {
-        console.error("Error in addExam:", error);
-        if (error.name === 'ValidationError') {
-            const messages = Object.values(error.errors).map(val => val.message);
+    } catch (err) {
+        console.error('Error caught in addExam controller:', err);
+        if (err.name === 'ValidationError') {
+            const messages = Object.values(err.errors).map(val => val.message);
             return res.status(400).json({ message: `Validation Error: ${messages.join(', ')}` });
         }
-        res.status(500).json({ message: 'Server Error adding exam.', error: error.message });
+        res.status(500).json({ message: 'Server error while creating exam.', error: err.message });
     }
 };
 
-
-// @route   GET /api/exams/student/:classLevel/:branchId
-// @desc    Get exams for a specific student's class level and branch
-// @access  Private (Students)
+// Get exams for a specific student's class level and branch, with payment eligibility check
 exports.getStudentExams = async (req, res) => {
     try {
-        const { classLevel, branchId } = req.params;
+        const studentUser = req.user;
 
-        // Ensure classLevel and branchId are provided
+        // Ensure the authenticated user is a student
+        if (!studentUser || studentUser.role !== 'student') {
+            return res.status(403).json({ message: 'Access denied. Only students can view their exams.' });
+        }
+
+        // Destructure necessary fields directly from the studentUser object
+        // 'department' is used here as it's the field name in your User model for student specialization.
+        const { classLevel, branchId, department, id: userId } = studentUser;
+
+        // Basic validation for student's class and branch info
         if (!classLevel || !branchId) {
-            return res.status(400).json({ message: 'Class level and branch ID are required.' });
+            return res.status(400).json({ message: 'Class level and Branch ID are required to fetch exams for this student.' });
         }
 
-        // Ensure branchId is a valid ObjectId
-        if (!mongoose.Types.ObjectId.isValid(branchId)) {
-            return res.status(400).json({ message: 'Invalid Branch ID format.' });
+        // Check if the student has made a successful payment
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
+        if (!isPaymentEligible) {
+            // If not payment eligible, return an empty array of exams
+            return res.json([]);
         }
 
-        // Construct query to find exams matching classLevel and branchId
+        // Build the base query for exams based on class level and branch
         const query = {
             classLevel: classLevel,
-            branchId: branchId,
-            examDate: { $lte: new Date() } // Only show exams that are on or before today
+            branchId: branchId
         };
 
+        // Add department-specific filtering for senior secondary students
+        if (isSeniorSecondaryClass(classLevel)) {
+            // If the student has a specific department (not null/undefined/N/A)
+            if (department && department !== 'N/A') {
+                query.areaOfSpecialization = department; // Filter exams by student's department
+            } else {
+                // If a senior student has no specific department, prevent them from seeing departmental exams
+                query.areaOfSpecialization = null; // This will only match exams explicitly set to null for areaOfSpecialization
+            }
+        } else {
+            // For non-senior classes, exams should typically have 'N/A' for areaOfSpecialization
+            query.areaOfSpecialization = 'N/A';
+        }
+
+        // Find exams matching the constructed query
         const exams = await Exam.find(query)
             .populate('createdBy', 'fullName')
             .populate('branchId', 'name')
-            // --- MODIFIED: Populating 'subjectName' for subjectsIncluded.subjectId ---
-            .populate('subjectsIncluded.subjectId', 'subjectName');
+            .populate('subjectsIncluded.subjectId', 'subjectName'); // Corrected: subjectName
 
-        // Transform exam data for the frontend to include a combined subject string
+        // Transform exam data for the frontend
         const transformedExams = exams.map(exam => ({
             _id: exam._id,
             title: exam.title,
-            description: exam.description,
-            durationMinutes: exam.durationMinutes,
-            totalQuestions: exam.totalQuestions,
-            classLevel: exam.classLevel,
-            // Map subjectsIncluded to display their names
+            // 🐛 POTENTIAL ISSUE HERE: If subjectsIncluded is empty/missing, .map() will fail or return empty
+            // Use the same robust logic as in getAllExams
             subject: exam.subjectsIncluded.map(si => {
-                // Check if subjectId is populated and has subjectName, otherwise fallback
-                return (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName)
-                                ? si.subjectId.subjectName
-                                : 'Unknown Subject';
-            }).join(', '), // Join multiple subjects with a comma
-            branchName: exam.branchId ? exam.branchId.name : 'N/A',
-            examDate: exam.examDate,
-            instructions: exam.instructions,
-            passMark: exam.passMark,
-            timeLimitPerQuestion: exam.timeLimitPerQuestion,
-            shuffleQuestions: exam.shuffleQuestions,
-            allowReview: exam.allowReview,
-            createdBy: exam.createdBy ? exam.createdBy.fullName : 'N/A',
-            createdAt: exam.createdAt,
-            updatedAt: exam.updatedAt,
+                return (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName) // Corrected: subjectName
+                               ? si.subjectId.subjectName // Corrected: subjectName
+                               : (si.subjectName || 'Unknown Subject');
+            }).join(', '),
+            classLevel: exam.classLevel,
+            duration: exam.duration,
+            totalQuestions: exam.totalQuestionsCount,
+            isPaymentEligibleForExam: isPaymentEligible, // Indicate payment status for this exam
+            areaOfSpecialization: exam.areaOfSpecialization // Include for clarity/debugging
         }));
 
         res.json(transformedExams);
+
     } catch (err) {
-        console.error('Error fetching student exams:', err);
-        res.status(500).json({ message: 'Server error fetching student exams.' });
+        console.error('Backend: Error fetching student-specific exams:', err.message);
+        res.status(500).json({ message: 'Server Error while fetching student exams.' });
     }
 };
 
-
-// @route   GET /api/exams/:examId/questions
-// @desc    Get all questions for a specific exam
-// @access  Private (Students after exam started, or Admins)
+// Get questions for a specific exam
 exports.getExamQuestions = async (req, res) => {
     try {
         const exam = await Exam.findById(req.params.examId)
-            // Populate subjectsIncluded to get subjectName for context
-            // --- MODIFIED: Populating 'subjectName' for subjectsIncluded.subjectId ---
-            .populate('subjectsIncluded.subjectId', 'subjectName')
-            // Populate questions themselves, and within questions, populate their subject
-            .populate({
+            .populate('subjectsIncluded.subjectId', 'subjectName') // Corrected: subjectName
+            .populate({ // This populates the actual questions
                 path: 'questions',
                 model: 'Question',
                 populate: {
                     path: 'subject',
                     model: 'Subject',
-                    select: 'subjectName' // --- MODIFIED: Select 'subjectName' ---
+                    select: 'subjectName' // Corrected: subjectName
                 }
             });
 
-        if (!exam) {
-            return res.status(404).json({ message: 'Exam not found.' });
+        // 🎯 CRITICAL DEBUGGING LOG:
+        console.log('DEBUG(getExamQuestions): Raw exam object after populate:', exam ? exam.toObject() : 'null'); // Debug line
+        if (exam && exam.subjectsIncluded) {
+            console.log('DEBUG(getExamQuestions): exam.subjectsIncluded before transformation:', exam.subjectsIncluded); // Debug line
+        } else {
+            console.log('DEBUG(getExamQuestions): exam or exam.subjectsIncluded is missing/null/undefined.'); // Debug line
         }
 
-        // Prepare subjects for the frontend
+        if (!exam) {
+            return res.status(404).json({ message: 'Exam not found' });
+        }
+
+        const studentUser = req.user;
+        const { id: userId } = studentUser;
+
+        // Re-check payment eligibility before allowing access to questions
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
+        if (!isPaymentEligible) {
+            return res.status(403).json({ message: 'Payment required to take this exam. Please ensure your fees are paid.' });
+        }
+
+        // Authorize student based on role, class level, and branch
+        if (studentUser.role !== 'student' ||
+            exam.classLevel !== studentUser.classLevel ||
+            (exam.branchId && exam.branchId.toString() !== studentUser.branchId.toString())) {
+            return res.status(403).json({ message: 'You are not authorized to take this exam.' });
+        }
+
+        // --- START: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
         const transformedSubjectsIncluded = exam.subjectsIncluded.map(si => {
+            // Check if subjectId is populated (an object)
             if (si.subjectId && typeof si.subjectId === 'object' && si.subjectId._id) {
                 return {
-                    subjectId: si.subjectId._id.toString(),
-                    subjectName: si.subjectId.subjectName, // --- MODIFIED: Use .subjectName ---
-                    numberOfQuestions: si.numberOfQuestions
+                    subjectId: si.subjectId._id.toString(), // Get _id from populated object
+                    subjectName: si.subjectId.subjectName, // Corrected: Get subjectName from populated object
+                    numberOfQuestions: si.numberOfQuestions // This should already be part of the `subjectsIncluded` sub-document
                 };
             } else {
+                // Fallback if subjectId is not populated (shouldn't happen with the added .populate)
+                // or if it's somehow malformed in the DB.
+                console.warn(`WARN(getExamQuestions): subjectsIncluded sub-document might not be fully populated for ID: ${si.subjectId || si._id}. Falling back.`); // Debug line
                 return {
-                    subjectId: si.subjectId ? si.subjectId.toString() : null, // Original ID if population failed
-                    subjectName: 'Unknown Subject',
-                    numberOfQuestions: si.numberOfQuestions
+                    subjectId: si.subjectId ? si.subjectId.toString() : (si._id ? si._id.toString() : 'N/A_ID'), // Fallback to original ID as string
+                    subjectName: 'Unknown Subject', // Provide a fallback name
+                    numberOfQuestions: si.numberOfQuestions || 0
                 };
             }
         });
+        // --- END: NEW IMPLEMENTATION FOR SUBJECTS INCLUDED TRANSFORMATION ---
 
-        // Transform questions for the frontend (hide correct answer if for student, etc.)
+        // Transform questions for the frontend (remove correct answers)
         const questionsToSend = exam.questions.map(q => {
             const transformedQuestion = {
                 _id: q._id,
                 questionText: q.questionText,
-                options: q.options,
-                // --- MODIFIED: Access subjectName for display ---
-                subjectName: q.subject ? q.subject.subjectName : 'N/A',
+                subjectName: q.subject ? q.subject.subjectName : 'N/A', // Corrected: subjectName
                 classLevel: q.classLevel,
-                category: q.category,
-                difficulty: q.difficulty,
-                imageUrl: q.imageUrl
             };
-
-            // If not an admin, or exam is in progress/completed, hide correctOptionIndex
-            // You might have specific role checks or exam state checks here.
-            // For now, assuming only admins get correct answer by default.
-            if (req.user && req.user.role === 'admin' || req.user.role === 'super_admin') {
-                 transformedQuestion.correctOptionIndex = q.correctOptionIndex;
-            } else {
-                // For students during exam, do NOT include correctOptionIndex
-            }
-
+            // Dynamically add options (option_a, option_b, etc.)
+            q.options.forEach((option, index) => {
+                const optionKeyChar = String.fromCharCode(65 + index); // A, B, C...
+                transformedQuestion[`option_${optionKeyChar.toLowerCase()}`] = option.text;
+            });
             return transformedQuestion;
         });
 
         res.json({
-            _id: exam._id,
-            title: exam.title,
-            description: exam.description,
-            durationMinutes: exam.durationMinutes,
-            totalQuestions: exam.totalQuestions,
-            classLevel: exam.classLevel,
-            subjectsIncluded: transformedSubjectsIncluded, // Send transformed subjects
-            examDate: exam.examDate,
-            instructions: exam.instructions,
-            timeLimitPerQuestion: exam.timeLimitPerQuestion,
-            shuffleQuestions: exam.shuffleQuestions,
-            allowReview: exam.allowReview,
-            passMark: exam.passMark,
-            questions: questionsToSend // Send transformed questions
+            exam: {
+                _id: exam._id,
+                title: exam.title,
+                classLevel: exam.classLevel,
+                duration: exam.duration,
+                totalQuestions: exam.totalQuestionsCount,
+                areaOfSpecialization: exam.areaOfSpecialization, // Include areaOfSpecialization
+                subjectsIncluded: transformedSubjectsIncluded // Use the transformed array
+            },
+            questions: questionsToSend
         });
 
     } catch (err) {
-        console.error('Error fetching exam questions:', err);
-        res.status(500).json({ message: 'Server error fetching exam questions.' });
+        console.error('CRITICAL ERROR fetching exam questions:', err.message); // Improved error logging
+        if (err.kind === 'ObjectId') {
+            return res.status(400).json({ message: 'Invalid Exam ID.' });
+        }
+        res.status(500).json({ message: 'Server error fetching exam questions.', error: err.message }); // Send error message to frontend
     }
 };
 
-
-// @route   PUT /api/exams/:id
-// @desc    Update an exam
-// @access  Private (Admin roles)
-exports.updateExam = async (req, res) => {
+// Submit an exam
+exports.submitExam = async (req, res) => {
     try {
-        const examId = req.params.id;
-        const updateData = req.body;
+        const { examId } = req.params;
+        const { answers } = req.body;
+        const userId = req.user.id;
 
-        if (!mongoose.Types.ObjectId.isValid(examId)) {
-            return res.status(400).json({ message: 'Invalid Exam ID.' });
+        if (!answers || !Array.isArray(answers)) {
+            return res.status(400).json({ message: 'Invalid answers format.' });
         }
 
-        // Basic validation for incoming updateData if needed (e.g., branchId validity)
-        if (updateData.branchId && !mongoose.Types.ObjectId.isValid(updateData.branchId)) {
-            return res.status(400).json({ message: 'Invalid Branch ID format in update data.' });
-        }
-         if (updateData.branchId) {
-            const branchExists = await Branch.findById(updateData.branchId);
-            if (!branchExists) {
-                return res.status(400).json({ message: 'Specified branch not found.' });
-            }
-        }
-        // Handle subjectsIncluded updates
-        if (updateData.subjectsIncluded) {
-            for (const item of updateData.subjectsIncluded) {
-                if (!item.subjectId || !mongoose.Types.ObjectId.isValid(item.subjectId) || typeof item.numberOfQuestions !== 'number' || item.numberOfQuestions <= 0) {
-                    return res.status(400).json({ message: 'Invalid subject included data in update. Each subject must have a valid subjectId and a positive numberOfQuestions.' });
-                }
-                const subjectExists = await Subject.findById(item.subjectId);
-                if (!subjectExists) {
-                    return res.status(400).json({ message: `Subject with ID ${item.subjectId} not found in update.` });
-                }
-            }
-        }
-
-        // Check if the user is a branch_admin and if they are trying to update an exam
-        // not belonging to their branch, or trying to change the branchId
-        if (req.user.role === 'branch_admin') {
-            const existingExam = await Exam.findById(examId);
-            if (!existingExam) {
-                return res.status(404).json({ message: 'Exam not found.' });
-            }
-            if (existingExam.branchId.toString() !== req.user.branchId.toString()) {
-                return res.status(403).json({ message: 'You are not authorized to update exams for other branches.' });
-            }
-            // If branch_admin tries to change branchId to something else, prevent it
-            if (updateData.branchId && updateData.branchId.toString() !== req.user.branchId.toString()) {
-                 return res.status(403).json({ message: 'Branch administrators cannot change the branch of an exam.' });
-            }
-            // Ensure they don't try to change createdBy or other sensitive fields
-            delete updateData.createdBy;
-        }
-
-
-        const updatedExam = await Exam.findByIdAndUpdate(examId, updateData, { new: true })
-            .populate('createdBy', 'fullName email role')
-            .populate('branchId', 'name')
-            // --- MODIFIED: Populating 'subjectName' for subjectsIncluded.subjectId ---
-            .populate('subjectsIncluded.subjectId', 'subjectName');
-
-        if (!updatedExam) {
+        const exam = await Exam.findById(examId).populate('questions');
+        if (!exam) {
             return res.status(404).json({ message: 'Exam not found.' });
         }
 
-        // Transform the updated exam response for consistency
-        const transformedSubjectsIncluded = updatedExam.subjectsIncluded.map(si => {
-            return {
-                ...si.toObject(),
-                subjectName: (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName)
-                             ? si.subjectId.subjectName
-                             : 'Unknown Subject'
-            };
+        const studentUser = req.user;
+
+        // Re-check payment eligibility before allowing submission
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
+        if (!isPaymentEligible) {
+            return res.status(403).json({ message: 'Payment required to submit this exam. Please ensure your fees are paid.' });
+        }
+
+        // Authorize student for submission
+        if (studentUser.role !== 'student' ||
+            exam.classLevel !== studentUser.classLevel ||
+            (exam.branchId && exam.branchId.toString() !== studentUser.branchId.toString())) {
+            return res.status(403).json({ message: 'You are not authorized to submit this exam.' });
+        }
+
+        let score = 0;
+        const totalQuestions = exam.questions.length;
+        const resultsDetails = [];
+
+        // Grade the submitted answers
+        for (const submittedAnswer of answers) {
+            const question = exam.questions.find(q => q._id.toString() === submittedAnswer.questionId);
+
+            if (question) {
+                const selectedOptionIndex = submittedAnswer.selectedOption.charCodeAt(0) - 'A'.charCodeAt(0);
+                const isCorrect = (selectedOptionIndex === question.correctOptionIndex);
+
+                if (isCorrect) {
+                    score++;
+                }
+
+                resultsDetails.push({
+                    question: question._id,
+                    selectedOption: submittedAnswer.selectedOption,
+                    correctOption: String.fromCharCode(65 + question.correctOptionIndex),
+                    isCorrect: isCorrect
+                });
+            }
+        }
+
+        const percentage = totalQuestions > 0 ? (score / totalQuestions) * 100 : 0;
+
+        // Save the result
+        const studentResult = new Result({
+            user: userId,
+            exam: examId,
+            score: score,
+            totalQuestions: totalQuestions,
+            percentage: percentage,
+            answers: resultsDetails,
+            dateTaken: new Date(),
+        });
+        await studentResult.save();
+
+        res.status(200).json({
+            message: 'Exam submitted successfully!',
+            score,
+            totalQuestions,
+            percentage,
+            results: resultsDetails
         });
 
-        const transformedUpdatedExam = {
-            ...updatedExam.toObject(),
-            subjectsIncluded: transformedSubjectsIncluded,
-        };
-
-        res.status(200).json({ message: 'Exam updated successfully.', exam: transformedUpdatedExam });
     } catch (err) {
-        console.error('Error updating exam:', err);
+        console.error('Error submitting exam:', err.message);
         if (err.name === 'ValidationError') {
             const messages = Object.values(err.errors).map(val => val.message);
             return res.status(400).json({ message: `Validation Error: ${messages.join(', ')}` });
         }
-        res.status(500).json({ message: 'Server error updating exam.' });
+        res.status(500).json({ message: 'Server error during exam submission.' });
     }
 };
 
-
-// @route   DELETE /api/exams/:id
-// @desc    Delete an exam
-// @access  Private (Admin roles)
+// Delete an exam
 exports.deleteExam = async (req, res) => {
     try {
-        const examId = req.params.id;
-
+        const { examId } = req.params;
         if (!mongoose.Types.ObjectId.isValid(examId)) {
             return res.status(400).json({ message: 'Invalid Exam ID.' });
         }
-
-        const examToDelete = await Exam.findById(examId);
-        if (!examToDelete) {
+        const deletedExam = await Exam.findByIdAndDelete(examId);
+        if (!deletedExam) {
             return res.status(404).json({ message: 'Exam not found.' });
         }
-
-        // Branch admin authorization: Can only delete exams from their branch
-        if (req.user.role === 'branch_admin' && examToDelete.branchId.toString() !== req.user.branchId.toString()) {
-            return res.status(403).json({ message: 'You are not authorized to delete exams from other branches.' });
-        }
-
-        await Exam.findByIdAndDelete(examId);
         res.status(200).json({ message: 'Exam deleted successfully.' });
     } catch (err) {
         console.error('Error deleting exam:', err);
         res.status(500).json({ message: 'Server error deleting exam.' });
+    }
+};
+
+// Update an exam
+exports.updateExam = async (req, res) => {
+    try {
+        const { examId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(examId)) {
+            return res.status(400).json({ message: 'Invalid Exam ID.' });
+        }
+        const updateData = req.body;
+
+        console.log("DEBUG(updateExam): Received update data for exam:", updateData); // Debug line
+
+        const updatedExam = await Exam.findByIdAndUpdate(examId, updateData, { new: true })
+            .populate('createdBy', 'fullName email role')
+            .populate('branchId', 'name')
+            .populate('subjectsIncluded.subjectId', 'subjectName'); // Corrected: subjectName
+
+        console.log("DEBUG(updateExam): Updated Exam object after saving and populating:", updatedExam ? updatedExam.toObject() : 'null'); // Debug line
+
+        if (!updatedExam) {
+            return res.status(404).json({ message: 'Exam not found.' });
+        }
+        res.status(200).json({ message: 'Exam updated successfully.', exam: updatedExam });
+    } catch (err) {
+        console.error('Error updating exam:', err);
+        res.status(500).json({ message: 'Server error updating exam.' });
     }
 };
