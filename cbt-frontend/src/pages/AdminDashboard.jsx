@@ -1254,7 +1254,7 @@ function AdminDashboard() {
                                     <tr key={q._id}>
                                         <td>{q.questionText}</td>
                                         <td>{q.classLevel}</td>
-                                        <td>{renderSafeString(q.subject?.name)}</td>
+                                        <td>{renderSafeString(q.subject?.subjectName)}</td>
                                         <td>
                                             {q.options.map((opt, i) => (
                                                 <div key={i}>{String.fromCharCode(65 + i)}. {opt.text}</div>
