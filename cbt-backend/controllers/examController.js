@@ -373,7 +373,13 @@ exports.submitExam = async (req, res) => {
             return res.status(400).json({ message: 'Invalid answers format.' });
         }
 
-        const exam = await Exam.findById(examId).populate('questions');
+        const exam = await Exam.findById(examId).populate({
+    path: 'questions',
+    populate: {
+        path: 'subject',
+        select: 'subjectName _id' // Ensure _id and subjectName are fetched
+    }
+});
         if (!exam) {
             return res.status(404).json({ message: 'Exam not found.' });
         }
