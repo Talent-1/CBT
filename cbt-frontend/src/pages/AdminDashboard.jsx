@@ -431,7 +431,7 @@ function AdminDashboard() {
                 const subject = availableSubjectsGrouped[newExam.classLevel]?.find(s => s._id === subjectId);
                 return {
                     subjectId: subjectId,
-                    subjectName: subject ? subject.name : 'Unknown Subject',
+                    subjectName: subject ? subject.subjectName : 'Unknown Subject',
                     numberOfQuestions: data.numQuestions,
                 };
             });
