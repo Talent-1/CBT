@@ -1,4 +1,3 @@
-// cbt-backend/controllers/questionController.js (MODIFIED - Populating Subject in getAllQuestions)
 const Question = require('../models/Question');
 const mongoose = require('mongoose');
 
@@ -13,16 +12,14 @@ exports.getAllQuestions = async (req, res) => {
             console.warn("Filtering questions by branch for branch_admin is complex if questions don't have direct branchId.");
         }
 
-        // --- FIX HERE: Add .populate('subject', 'name') ---
-        // This tells Mongoose to replace the 'subject' ObjectId with the actual
-        // Subject document, but only include the 'name' field from it.
-        const questions = await Question.find(query).populate('subject', 'name');
-        // --- END FIX ---
+        // --- MODIFIED: Populating 'subjectName' instead of 'name' ---
+        const questions = await Question.find(query).populate('subject', 'subjectName');
+        // --- END MODIFICATION ---
 
         console.log('DEBUG (getAllQuestions): Fetched questions, checking population...');
         if (questions.length > 0) {
             console.log('DEBUG (getAllQuestions): First question subject data:', questions[0].subject);
-            // Expected output here would be: { _id: ObjectId, name: 'Subject Name' } or null/undefined if not found
+            // Expected output here would be: { _id: ObjectId, subjectName: 'Subject Name' } or null/undefined if not found
         }
 
         res.status(200).json(questions);
@@ -31,6 +28,31 @@ exports.getAllQuestions = async (req, res) => {
         res.status(500).json({ message: 'Server Error fetching questions.' });
     }
 };
+
+// Example: Get a single question by ID (Crucial for Edit button functionality)
+exports.getQuestionById = async (req, res) => {
+    try {
+        const { id } = req.params; // Get the ID from the URL parameters
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid Question ID format.' });
+        }
+
+        // --- MODIFIED: Populating 'subjectName' instead of 'name' ---
+        const question = await Question.findById(id).populate('subject', 'subjectName');
+        // --- END MODIFICATION ---
+
+        if (!question) {
+            return res.status(404).json({ message: 'Question not found.' });
+        }
+
+        console.log('DEBUG (getQuestionById): Fetched single question:', question.questionText, 'Subject:', question.subject ? question.subject.subjectName : 'N/A');
+        res.status(200).json(question);
+    } catch (error) {
+        console.error("Error in getQuestionById:", error);
+        res.status(500).json({ message: 'Server Error fetching single question.' });
+    }
+};
+
 
 // Example: Add a new question (Super Admin Only)
 exports.addQuestion = async (req, res) => {
@@ -96,7 +118,7 @@ exports.deleteQuestion = async (req, res) => {
             return res.status(404).json({ message: 'Question not found.' });
         }
         // Remove this question's ObjectId from all exams that reference it
-        const Exam = require('../models/Exam');
+        const Exam = require('../models/Exam'); // Require Exam model here to avoid circular dependency issues if Exam also requires Question
         const result = await Exam.updateMany(
             { questions: id },
             { $pull: { questions: id } }
@@ -122,8 +144,10 @@ exports.updateQuestion = async (req, res) => {
             return res.status(400).json({ message: 'Invalid Question ID.' });
         }
         const updateData = req.body;
+        // --- MODIFIED: Populating 'subjectName' instead of 'name' ---
         const updatedQuestion = await Question.findByIdAndUpdate(id, updateData, { new: true })
-            .populate('subject', 'name');
+            .populate('subject', 'subjectName');
+        // --- END MODIFICATION ---
         if (!updatedQuestion) {
             return res.status(404).json({ message: 'Question not found.' });
         }
