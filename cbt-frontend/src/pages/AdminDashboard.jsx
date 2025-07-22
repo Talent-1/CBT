@@ -370,16 +370,32 @@ function AdminDashboard() {
     };
 
     const handleSubjectSelectionForExam = (subjectId, isChecked) => {
-        setSelectedSubjectsForExam(prev => {
-            const newState = { ...prev };
-            if (isChecked) {
-                newState[subjectId] = { isSelected: true, numQuestions: 0 };
-            } else {
-                delete newState[subjectId];
-            }
-            return newState;
-        });
-    };
+    setSelectedSubjectsForExam(prevSelected => {
+        const newState = { ...prevSelected };
+
+        // 1. Find the full subject object from your availableSubjectsGrouped state.
+        //    We flatten the grouped subjects to search across all class levels.
+        const allSubjectsFlat = Object.values(availableSubjectsGrouped).flat();
+        const selectedSubjectData = allSubjectsFlat.find(s => s._id === subjectId);
+
+        if (!selectedSubjectData) {
+            console.error("Error: Subject data not found for ID:", subjectId);
+            return prevSelected; // Prevent updating state with incomplete data
+        }
+
+        if (isChecked) {
+            newState[subjectId] = {
+                isSelected: true,
+                numQuestions: prevSelected[subjectId]?.numQuestions || '', // Preserve existing numQuestions or set to empty
+                subjectName: selectedSubjectData.subjectName // ⭐ THIS IS THE CRUCIAL ADDITION
+            };
+        } else {
+            // If unchecking, remove the subject from the state
+            delete newState[subjectId];
+        }
+        return newState;
+    });
+};
 
     const handleNumQuestionsForSubject = (subjectId, value) => {
         setSelectedSubjectsForExam(prev => ({
