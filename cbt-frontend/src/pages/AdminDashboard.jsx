@@ -426,15 +426,16 @@ function AdminDashboard() {
         }
 
         const selectedSubjectsArray = Object.entries(selectedSubjectsForExam)
-            .filter(([, data]) => data.isSelected)
-            .map(([subjectId, data]) => {
-                const subject = availableSubjectsGrouped[newExam.classLevel]?.find(s => s._id === subjectId);
-                return {
-                    subjectId: subjectId,
-                    subjectName: subject ? subject.subjectName : 'Unknown Subject',
-                    numberOfQuestions: data.numQuestions,
-                };
-            });
+    .filter(([, data]) => data.isSelected)
+    .map(([subjectId, data]) => {
+        // You no longer need to find the subject again here because subjectName is already in 'data'
+        return {
+            subjectId: subjectId,
+            subjectName: data.subjectName, // ⭐ CORRECTED: Use data.subjectName directly
+            numberOfQuestions: data.numQuestions,
+        };
+    });
+
 
         if (selectedSubjectsArray.length === 0) {
             setError('Please select at least one subject for the exam.');
