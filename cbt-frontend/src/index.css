@@ -25,7 +25,7 @@ body {
 
 /* Global Background Image (apply to html or body, depending on desired coverage) */
 html {
-  background-image: url('/school-logo.png'); /* Replace with your actual image path */
+  background-image: url('/school-logo.jpg'); /* Replace with your actual image path */
   background-size: cover;
   background-position: center;
   background-attachment: fixed; /* Keeps background fixed when scrolling */
