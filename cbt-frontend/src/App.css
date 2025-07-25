@@ -10,7 +10,7 @@
   margin: 0;
   padding: 0; /* Remove root padding to allow header/footer to go edge-to-edge */
   text-align: center;
-  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay for readability */
+  background-color: rgba(132, 226, 163, 0.6); /* Semi-transparent overlay for readability */
 }
 
 .app-container {

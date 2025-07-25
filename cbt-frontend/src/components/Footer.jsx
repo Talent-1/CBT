@@ -53,7 +53,7 @@ function Footer() {
           <a href="https://talenttechhub.com" target="_blank" rel="noopener noreferrer">
             <img src="/talent-tech-hub.png" alt="Talent Tech Hub Logo" className="company-logo" />
           </a>
-          <p>Talent Tech Hub &copy; {currentYear}</p>
+          <p>Talent Code Ascend&copy; {currentYear}</p>
         </div>
       </div>
     </footer>
