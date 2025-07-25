@@ -47,7 +47,7 @@ const Header = () => {
             <div className="header-content">
                 <Link to="/" className="logo-link" onClick={closeMenu}>
                     <img src="/path/to/your/school_logo.png" alt="School Logo" className="school-logo" /> {/* IMPORTANT: Update path to your actual logo */}
-                    <h1>CITY GROUP OF SCHOOLS, OGID</h1> {/* Your school name */}
+                    <h1>CITY GROUP OF SCHOOLS, OGIDI/UMUOJI</h1> 
                 </Link>
 
                 {/* Hamburger Menu Icon - Visible on small screens */}

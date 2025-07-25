@@ -233,72 +233,23 @@
     max-width: 600px; /* You can set a max-width for these inner sections */
     margin-left: auto; /* Center it */
     margin-right: auto; /* Center it */
-}
 
-
-/* --- Footer Styling --- */
-.app-footer {
-    background-color: #005600; /* Match header for consistency */
-    color: white;
-    padding: 20px;
-    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
-    width: 100%;
-    margin-top: auto; /* Pushes footer to the bottom */
-    box-sizing: border-box;
-    overflow-x: hidden; /* Prevent footer content from causing horizontal scroll */
-}
-
-.footer-content {
+    /* NEW/MODIFIED: Ensure buttons within can wrap if they are siblings */
     display: flex;
-    flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
-    justify-content: space-around;
-    align-items: flex-start;
-    max-width: 1200px;
-    margin: 0 auto;
-    text-align: left;
+    flex-direction: column; /* Default to column for content inside */
+    align-items: center; /* Center items horizontally within the column */
+}
+
+/* --- Button Grouping for Responsiveness --- */
+/* If you have multiple buttons in a row, wrap them in a div like this: */
+.button-group {
+    display: flex;
+    flex-wrap: wrap; /* Allows buttons to wrap to the next line */
+    justify-content: center; /* Center buttons when they wrap */
+    gap: 10px; /* Spacing between buttons */
+    margin-top: 15px; /* Space above button group */
+    width: 100%; /* Ensure button group takes full width to wrap */
     box-sizing: border-box;
-}
-
-.footer-section {
-    flex: 1; /* Distribute space */
-    min-width: 250px; /* Minimum width before wrapping */
-    margin: 10px;
-    box-sizing: border-box;
-}
-
-.footer-section h3 {
-    color: #007bff; /* Highlight footer headings */
-    margin-bottom: 10px;
-}
-
-.footer-section ul {
-    list-style: none;
-    padding: 0;
-}
-
-.footer-section ul li {
-    margin-bottom: 5px;
-}
-
-.footer-section a {
-    color: #bbb;
-    text-decoration: none;
-    transition: color 0.3s ease;
-}
-
-.footer-section a:hover {
-    color: #007bff;
-}
-
-.footer-section p {
-    margin-bottom: 5px;
-    color: #bbb;
-    font-size: 0.9em;
-}
-
-.company-logo {
-    height: 30px; /* Adjust as needed */
-    margin-top: 10px;
 }
 
 /* General Form and Input Styles */
@@ -312,14 +263,14 @@ select {
     border: 1px solid #555;
     background-color: #444;
     color: white;
-    width: 100%; /* Make them take full width of their parent container */
+    width: 100%; /* Make them take full width of their parent container by default */
     box-sizing: border-box; /* Include padding and border in element's total width */
     max-width: 100%; /* Explicitly cap max width */
 }
 
 /* Specific Button Widths: override the 100% width for general form buttons */
 .main-nav button, /* Buttons in the header nav */
-.dashboard-button, /* General dashboard buttons */
+.dashboard-button, /* General dashboard buttons (including "Mark Successful") */
 .logout-button, /* Logout button specific */
 .login-button, /* Login button specific */
 .register-button, /* Register button specific */
@@ -329,6 +280,9 @@ select {
     max-width: fit-content; /* Ensure they don't grow too large */
     display: inline-block; /* Crucial for width: auto and centering within a line */
     margin: 5px; /* Added general margin for spacing */
+    flex-shrink: 0; /* Prevent them from shrinking unless absolutely necessary */
+    min-width: 80px; /* A minimum width to prevent them from becoming too small */
+    padding: 10px 20px; /* More generous padding for better touch targets */
 }
 
 
@@ -463,7 +417,7 @@ p {
 
 /* --- Global Background Image (from your index.css, moved here for clarity with app styles) --- */
 html {
-    background-image: url('/school-logos.jpg'); /* Using your provided background image */
+    background-image: url('/image_ee81aa.jpg'); /* Using your provided background image */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Keeps background fixed when scrolling */
