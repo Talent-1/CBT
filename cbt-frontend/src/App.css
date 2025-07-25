@@ -196,7 +196,7 @@
     max-width: 90%; /* Allow more width for content */
     min-width: 320px; /* Prevent it from getting too small */
     margin: 20px auto; /* Center the content area */
-    background-color: rgba(45, 45, 45, 0.6); /* Slightly more transparent dark background for content */
+    background-color: rgba(255, 255, 255, 0.6); /* Slightly more transparent dark background for content */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     box-sizing: border-box; /* Include padding in element's total width */
