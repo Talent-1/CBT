@@ -464,7 +464,7 @@ p {
 
 /* --- Global Background Image (from your index.css, moved here for clarity with app styles) --- */
 html {
-    background-image: url('/image_ee81aa.jpg'); /* Using your provided background image */
+    background-image: url('/school-logo.jpg'); /* Using your provided background image */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Keeps background fixed when scrolling */
@@ -486,7 +486,6 @@ body {
         justify-content: space-between; /* Space them out */
         align-items: center; /* Vertically align */
         flex-wrap: nowrap; /* Prevent wrapping in header-content itself */
-        /* Crucial: Ensure the content itself doesn't cause overflow */
         overflow: hidden; /* Hide anything that goes beyond the content width */
     }
 

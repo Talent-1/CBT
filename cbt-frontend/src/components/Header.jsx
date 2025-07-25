@@ -25,11 +25,11 @@ function Header() {
     return (
         <header className="app-header">
             <div className="header-content">
-                {/* School Name / Logo */}
+              
                 <Link to={user ? (user.role === 'admin' ? '/admin' : '/dashboard') : '/'} className="logo-link">
-                    {/* Assuming /school-logos.jpg is in your public folder */}
+                  
                     <img src="/school-logos.jpg" alt="School Logo" className="school-logo" />
-                    {/* If using src/assets logo: <img src={schoolLogo} alt="School Logo" className="school-logo" /> */}
+
                     <h1>CITY GROUP OF SCHOOLS, OGIDI/UMUOJI</h1>
                 </Link>
 
@@ -56,7 +56,6 @@ function Header() {
                                 <>
                                     <Link to="/dashboard" onClick={() => setIsMenuOpen(false)}>Dashboard</Link>
                                     <Link to="/results" onClick={() => setIsMenuOpen(false)}>My Results</Link>
-                                    {/* Assuming Payment link is relevant for students */}
                                     <Link to="/payment" onClick={() => setIsMenuOpen(false)}>Make Payment</Link>
                                 </>
                             )}
