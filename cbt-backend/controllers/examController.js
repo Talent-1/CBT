@@ -58,8 +58,8 @@ exports.getAllExams = async (req, res) => {
                     ...si.toObject(),
                     // Add a more robust fallback for subjectName to prevent crashes
                     subjectName: (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName) // Corrected: subjectName
-                                 ? si.subjectId.subjectName // Use populated subjectName if available and valid object
-                                 : (si.subjectName || 'Unknown Subject') // Fallback to denormalized name, then a generic string
+                                     ? si.subjectId.subjectName // Use populated subjectName if available and valid object
+                                     : (si.subjectName || 'Unknown Subject') // Fallback to denormalized name, then a generic string
                 };
             });
             return {
@@ -200,17 +200,11 @@ exports.getStudentExams = async (req, res) => {
             return res.status(400).json({ message: 'Class level and Branch ID are required to fetch exams for this student.' });
         }
 
-        // Check if the student has made a successful payment
-        const isPaymentEligible = await hasSuccessfulPayment(userId);
-        if (!isPaymentEligible) {
-            // If not payment eligible, return an empty array of exams
-            return res.json([]);
-        }
-
         // Build the base query for exams based on class level and branch
         const query = {
             classLevel: classLevel,
-            branchId: branchId
+            branchId: branchId,
+            isActive: true // <--- ADD THIS LINE: Only fetch exams that are active!
         };
 
         // Add department-specific filtering for senior secondary students
@@ -219,13 +213,17 @@ exports.getStudentExams = async (req, res) => {
             if (department && department !== 'N/A') {
                 query.areaOfSpecialization = department; // Filter exams by student's department
             } else {
-                // If a senior student has no specific department, prevent them from seeing departmental exams
-                query.areaOfSpecialization = null; // This will only match exams explicitly set to null for areaOfSpecialization
+                // If a senior student has no specific department, include exams with 'N/A' or null areaOfSpecialization
+                // This allows general senior secondary exams to be seen by students without a specific department.
+                // If you only want them to see exams *explicitly* set to null, then keep query.areaOfSpecialization = null;
+                query.areaOfSpecialization = { $in: ['N/A', null] };
             }
         } else {
             // For non-senior classes, exams should typically have 'N/A' for areaOfSpecialization
             query.areaOfSpecialization = 'N/A';
         }
+
+        console.log("DEBUG(getStudentExams): Final MongoDB query:", query); // Debug the query
 
         // Find exams matching the constructed query
         const exams = await Exam.find(query)
@@ -233,24 +231,35 @@ exports.getStudentExams = async (req, res) => {
             .populate('branchId', 'name')
             .populate('subjectsIncluded.subjectId', 'subjectName'); // Corrected: subjectName
 
+        // Check payment eligibility AFTER fetching the exams.
+        // This way, you still send the exam data to the frontend,
+        // but the frontend can use the `isPaymentEligibleForExam` flag
+        // to determine if the "Start Exam" button should be active.
+        const isPaymentEligible = await hasSuccessfulPayment(userId);
+        // REMOVE THE BELOW LINE:
+        // if (!isPaymentEligible) {
+        //     return res.json([]);
+        // }
+
         // Transform exam data for the frontend
         const transformedExams = exams.map(exam => ({
             _id: exam._id,
             title: exam.title,
-            // 🐛 POTENTIAL ISSUE HERE: If subjectsIncluded is empty/missing, .map() will fail or return empty
-            // Use the same robust logic as in getAllExams
+            // Use the same robust logic as in getAllExams for subject name
             subject: exam.subjectsIncluded.map(si => {
-                return (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName) // Corrected: subjectName
-                               ? si.subjectId.subjectName // Corrected: subjectName
+                return (si.subjectId && typeof si.subjectId === 'object' && si.subjectId.subjectName)
+                               ? si.subjectId.subjectName
                                : (si.subjectName || 'Unknown Subject');
             }).join(', '),
             classLevel: exam.classLevel,
             duration: exam.duration,
             totalQuestions: exam.totalQuestionsCount,
             isPaymentEligibleForExam: isPaymentEligible, // Indicate payment status for this exam
-            areaOfSpecialization: exam.areaOfSpecialization // Include for clarity/debugging
+            areaOfSpecialization: exam.areaOfSpecialization, // Include for clarity/debugging
+            isActive: exam.isActive // <--- ADD THIS LINE: Include the active status in the response!
         }));
 
+        console.log(`DEBUG(getStudentExams): Sending ${transformedExams.length} transformed exams.`); // Debug line
         res.json(transformedExams);
 
     } catch (err) {
@@ -288,6 +297,11 @@ exports.getExamQuestions = async (req, res) => {
 
         const studentUser = req.user;
         const { id: userId } = studentUser;
+
+        // ⭐ NEW CHECK: Ensure the exam is active before allowing access to questions
+        if (!exam.isActive) {
+            return res.status(403).json({ message: 'This exam is currently inactive and cannot be accessed.' });
+        }
 
         // Re-check payment eligibility before allowing access to questions
         const isPaymentEligible = await hasSuccessfulPayment(userId);
@@ -348,7 +362,8 @@ exports.getExamQuestions = async (req, res) => {
                 duration: exam.duration,
                 totalQuestions: exam.totalQuestionsCount,
                 areaOfSpecialization: exam.areaOfSpecialization, // Include areaOfSpecialization
-                subjectsIncluded: transformedSubjectsIncluded // Use the transformed array
+                subjectsIncluded: transformedSubjectsIncluded, // Use the transformed array
+                isActive: exam.isActive // <--- ADD THIS LINE: Ensure isActive is sent for ExamInstructions
             },
             questions: questionsToSend
         });
@@ -374,17 +389,22 @@ exports.submitExam = async (req, res) => {
         }
 
         const exam = await Exam.findById(examId).populate({
-    path: 'questions',
-    populate: {
-        path: 'subject',
-        select: 'subjectName _id' // Ensure _id and subjectName are fetched
-    }
-});
+            path: 'questions',
+            populate: {
+                path: 'subject',
+                select: 'subjectName _id' // Ensure _id and subjectName are fetched
+            }
+        });
         if (!exam) {
             return res.status(404).json({ message: 'Exam not found.' });
         }
 
         const studentUser = req.user;
+
+        // ⭐ NEW CHECK: Prevent submission if exam is inactive
+        if (!exam.isActive) {
+            return res.status(403).json({ message: 'This exam is currently inactive and cannot be submitted.' });
+        }
 
         // Re-check payment eligibility before allowing submission
         const isPaymentEligible = await hasSuccessfulPayment(userId);
