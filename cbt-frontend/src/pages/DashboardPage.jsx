@@ -307,7 +307,7 @@ function DashboardPage() {
                                         <p><strong>Total Questions:</strong> {exam.totalQuestions}</p>
                                         <p><strong>Status:</strong> <span className={exam.isActive ? 'text-green-400' : 'text-red-400'}>{exam.isActive ? 'Active' : 'Inactive'}</span></p> {/* Display exam status */}
                                         <button
-                                            onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam, exam.isActive)} // ⭐ PASS isActive HERE
+                                            onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam, )} // ⭐ PASS isActive HERE
                                             className={`start-exam-button ${!exam.isPaymentEligibleForExam || !exam.isActive ? 'inactive' : ''}`} // ⭐ ADD INACTIVE CLASS
                                             disabled={!exam.isPaymentEligibleForExam } // ⭐ ADD !exam.isActive TO DISABLED
                                         >
