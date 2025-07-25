@@ -79,7 +79,6 @@
     text-align: left; /* Ensure text aligns left */
     flex-grow: 1; /* Allow h1 to take available space */
     min-width: 0; /* Allow the text to shrink below its content width */
-    /* No max-width here, flexbox will manage it with flex-shrink */
     box-sizing: border-box;
 }
 
@@ -125,7 +124,7 @@
 
 /* Main Navigation (Desktop State) */
 .main-nav {
-    display: flex; /* Default to flex for desktop */
+    display: flex; /* Default to flex for desktop: makes links horizontal */
     align-items: center; /* Vertically centers menu items */
     gap: 25px; /* Adds consistent spacing between menu items */
     margin-left: auto; /* Pushes the nav block to the far right within header-content */
@@ -133,10 +132,9 @@
     flex-wrap: nowrap; /* Prevent wrapping on desktop */
     justify-content: flex-end; /* Align items to the right */
     box-sizing: border-box;
-    flex-shrink: 0; 
-    min-width: -webkit-fill-available;/* Prevent nav from shrinking unless absolutely necessary */
+    flex-shrink: 0; /* Prevent nav from shrinking unless absolutely necessary */
+    min-width: -webkit-fill-available; /* Add for Samsung Internet compatibility */
     min-width: fit-content; /* Ensure nav doesn't shrink to less than its content requires */
-    /* On desktop, remove max-width to allow it to push the title if needed */
 }
 
 /* If you have a ul inside your nav, these styles apply */
@@ -145,7 +143,7 @@
     padding: 0;
     margin: 0;
     display: flex;
-    flex-direction: row; /* Desktop default */
+    flex-direction: row; /* Desktop default: ensures li items are horizontal */
     gap: 25px;
     min-width: 0; /* Allows list items within ul to shrink */
 }
@@ -497,12 +495,6 @@ body {
 
     .logo-link h1 {
         font-size: 1.2em; /* Slightly larger on tablet than phone */
-        /*
-        The max-width here is critical. We need to reserve space for the logo
-        and the hamburger/nav links. A good rule of thumb is
-        calc(100% - [logo_width + hamburger_width + padding_between_them])
-        Let's estimate 40px for logo + 30px for hamburger + 10px margin = 80px
-        */
         max-width: calc(100% - 100px); /* Adjusted for more safety */
         padding-right: 5px; /* Add some space before icon/nav */
     }
@@ -571,7 +563,6 @@ body {
     @media (max-width: 600px) {
         .logo-link h1 {
             font-size: 1.05em; /* Smaller font for phones */
-            /* Even tighter max-width for very small screens */
             max-width: calc(100% - 70px); /* Adjusted for smaller logo/hamburger width */
             padding-right: 4px;
         }
