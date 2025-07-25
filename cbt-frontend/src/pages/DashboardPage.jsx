@@ -309,7 +309,7 @@ function DashboardPage() {
                                         <button
                                             onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam, exam.isActive)} // ⭐ PASS isActive HERE
                                             className={`start-exam-button ${!exam.isPaymentEligibleForExam || !exam.isActive ? 'inactive' : ''}`} // ⭐ ADD INACTIVE CLASS
-                                            disabled={!exam.isPaymentEligibleForExam || !exam.isActive} // ⭐ ADD !exam.isActive TO DISABLED
+                                            disabled={!exam.isPaymentEligibleForExam } // ⭐ ADD !exam.isActive TO DISABLED
                                         >
                                             {exam.isActive ? ( // ⭐ CONDITIONAL BUTTON TEXT
                                                 exam.isPaymentEligibleForExam ? 'Start Exam' : 'Payment Required'
@@ -320,10 +320,7 @@ function DashboardPage() {
                                         {!exam.isPaymentEligibleForExam && (
                                             <p className="text-red-400 text-sm mt-2">Settle fees to access this exam.</p>
                                         )}
-                                        {/* ⭐ NEW: Message if exam is inactive */}
-                                        {!exam.isActive && (
-                                            <p className="text-red-400 text-sm mt-2">This exam is currently inactive.</p>
-                                        )}
+                                       
                                     </div>
                                 ))}
                             </div>
