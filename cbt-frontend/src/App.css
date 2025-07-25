@@ -1,7 +1,6 @@
 /* cbt-frontend/src/App.css */
 
-/* Global App Container and Root Styling (from your previous App.css and index.css for consistency) */
-/* This section should primarily focus on the overall page structure */
+/* Global App Container and Root Styling */
 #root {
     display: flex;
     flex-direction: column;
@@ -11,7 +10,6 @@
     margin: 0;
     padding: 0; /* Remove root padding to allow header/footer to go edge-to-edge */
     text-align: center; /* This might be better handled on individual elements */
-    /* REMOVED: background-color: rgba(132, 226, 163, 0.6); from #root to avoid overlay */
 }
 
 /* This is a nested container, useful if you want to wrap all content */
@@ -20,8 +18,6 @@
     flex-direction: column;
     width: 100%;
     flex-grow: 1; /* Allows app-container to take available space */
-    /* REMOVED: min-height: 100vh; here as #root already handles it, and this can cause double scrollbars */
-    /* REMOVED: background-color: #333; (handled by main content and header/footer) */
 }
 
 /* --- Header Styling --- */
@@ -38,6 +34,8 @@
     position: sticky; /* Make header sticky */
     top: 0;
     z-index: 50; /* Ensure it stays on top of other content */
+    box-sizing: border-box; /* Ensure padding is included in header's width */
+    overflow-x: hidden; /* Prevent header content from causing horizontal scroll */
 }
 
 .header-content {
@@ -47,6 +45,7 @@
     max-width: 1200px; /* Constrain content width for larger screens */
     width: 100%; /* Ensure it takes full width within app-header */
     margin: 0; /* Remove auto margin as app-header centers it */
+    box-sizing: border-box; /* Ensure padding/borders are included */
 }
 
 .logo-link {
@@ -56,13 +55,17 @@
     color: white;
     font-size: 1.5em; /* Base font size, adjust h1 separately if needed */
     font-weight: bold;
-    flex-shrink: 0; /* Prevent it from shrinking */
-    padding-right: 10px; /* Add some space before hamburger if present */
+    flex-shrink: 1; /* ALLOWS logo-link to shrink, crucial for responsiveness */
+    min-width: 0; /* Allows content within to shrink below its intrinsic size */
+    padding-right: 10px; /* Add some space before nav or hamburger */
+    overflow: hidden; /* Hide anything that overflows within logo-link */
+    box-sizing: border-box;
 }
 
 .school-logo {
     height: 40px; /* Adjust as needed */
     margin-right: 10px;
+    flex-shrink: 0; /* Prevent logo image from shrinking */
 }
 
 /* School Name (h1) Styling - Ensure single line with ellipsis */
@@ -74,7 +77,10 @@
     text-overflow: ellipsis; /* Add ellipsis for hidden text */
     line-height: 1.2; /* Adjust line height for better visual */
     text-align: left; /* Ensure text aligns left */
-    /* max-width will be applied in media queries for responsiveness */
+    flex-grow: 1; /* Allow h1 to take available space */
+    min-width: 0; /* Allow the text to shrink below its content width */
+    /* No max-width here, flexbox will manage it with flex-shrink */
+    box-sizing: border-box;
 }
 
 /* Hamburger Menu Icon (Desktop State - Hidden) */
@@ -93,6 +99,7 @@
     height: 25px;
     padding: 0;
     z-index: 100; /* Ensure button is on top */
+    flex-shrink: 0; /* Prevent hamburger button from shrinking */
 }
 
 .hamburger-line {
@@ -125,6 +132,11 @@
     font-size: 1.1em; /* Adjust font size for menu items */
     flex-wrap: nowrap; /* Prevent wrapping on desktop */
     justify-content: flex-end; /* Align items to the right */
+    box-sizing: border-box;
+    flex-shrink: 0; 
+    min-width: -webkit-fill-available;/* Prevent nav from shrinking unless absolutely necessary */
+    min-width: fit-content; /* Ensure nav doesn't shrink to less than its content requires */
+    /* On desktop, remove max-width to allow it to push the title if needed */
 }
 
 /* If you have a ul inside your nav, these styles apply */
@@ -135,12 +147,17 @@
     display: flex;
     flex-direction: row; /* Desktop default */
     gap: 25px;
+    min-width: 0; /* Allows list items within ul to shrink */
 }
 
 .welcome-message {
     color: #add8e6; /* A lighter color for welcome message for better contrast */
     white-space: nowrap; /* Prevent the welcome message from wrapping */
     font-size: 0.9em; /* Smaller font for welcome message */
+    box-sizing: border-box;
+    overflow: hidden; /* Hide overflow */
+    text-overflow: ellipsis; /* Add ellipsis */
+    min-width: 0; /* Allow shrinking */
 }
 
 .main-nav a,
@@ -158,6 +175,8 @@
     text-align: center; /* Center text within buttons/links */
     display: inline-block; /* Allows padding and width to work as expected */
     width: auto; /* Default width for desktop */
+    box-sizing: border-box;
+    flex-shrink: 0; /* Prevent individual nav items from shrinking on desktop */
 }
 
 .main-nav a:hover,
@@ -181,25 +200,41 @@
     background-color: #0056b3;
 }
 
-.register-button { /* Added style for Register button */
+.register-button {
     background-color: #28a745;
 }
 .register-button:hover {
     background-color: #218838;
 }
 
-
 /* --- Main Content Area --- */
 .main-content {
     flex-grow: 1; /* Allows main content to take up available space */
     padding: 40px 20px; /* Add padding top/bottom */
-    max-width: 90%; /* Allow more width for content */
+    max-width: 1000px; /* Adjust as needed, e.g., 900px, 1000px, or 90vw */
     min-width: 320px; /* Prevent it from getting too small */
     margin: 20px auto; /* Center the content area */
-    background-color: rgba(255, 255, 255, 0.3); /* Slightly more transparent dark background for content */
+    background-color: rgba(45, 45, 45, 0.6); /* Transparent dark background for content */
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     box-sizing: border-box; /* Include padding in element's total width */
+    overflow-x: hidden; /* Prevent horizontal scrollbar if content slightly exceeds */
+    text-align: left; /* Default text alignment for content inside */
+}
+
+/* Specific styling for dashboard-like sections within main-content */
+.dashboard-section {
+    background-color: #3a3a3a; /* Darker background for these sub-sections */
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    border: 1px solid #555;
+    text-align: center; /* Center content within this section */
+    box-sizing: border-box;
+    width: 100%; /* Occupy full width of main-content */
+    max-width: 600px; /* You can set a max-width for these inner sections */
+    margin-left: auto; /* Center it */
+    margin-right: auto; /* Center it */
 }
 
 
@@ -211,6 +246,8 @@
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
     width: 100%;
     margin-top: auto; /* Pushes footer to the bottom */
+    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent footer content from causing horizontal scroll */
 }
 
 .footer-content {
@@ -221,12 +258,14 @@
     max-width: 1200px;
     margin: 0 auto;
     text-align: left;
+    box-sizing: border-box;
 }
 
 .footer-section {
     flex: 1; /* Distribute space */
     min-width: 250px; /* Minimum width before wrapping */
     margin: 10px;
+    box-sizing: border-box;
 }
 
 .footer-section h3 {
@@ -275,9 +314,25 @@ select {
     border: 1px solid #555;
     background-color: #444;
     color: white;
-    width: calc(100% - 20px); /* Adjust width to fit container with padding */
+    width: 100%; /* Make them take full width of their parent container */
     box-sizing: border-box; /* Include padding and border in element's total width */
+    max-width: 100%; /* Explicitly cap max width */
 }
+
+/* Specific Button Widths: override the 100% width for general form buttons */
+.main-nav button, /* Buttons in the header nav */
+.dashboard-button, /* General dashboard buttons */
+.logout-button, /* Logout button specific */
+.login-button, /* Login button specific */
+.register-button, /* Register button specific */
+.upload-label /* Label acting as a button */
+{
+    width: auto; /* Allow these buttons to size to content + padding */
+    max-width: fit-content; /* Ensure they don't grow too large */
+    display: inline-block; /* Crucial for width: auto and centering within a line */
+    margin: 5px; /* Added general margin for spacing */
+}
+
 
 button {
     cursor: pointer;
@@ -293,13 +348,14 @@ form {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    width: 100%;
-    max-width: 400px;
-    margin: 20px auto;
+    width: 100%; /* Ensure form takes full width of its parent (.main-content or .dashboard-section) */
+    max-width: 500px; /* Keep a sensible max-width for form content */
+    margin: 20px auto; /* Center the form within its parent */
     padding: 20px;
     border: 1px solid #555;
     border-radius: 8px;
     background-color: #2d2d2d;
+    box-sizing: border-box; /* Crucial for form padding */
 }
 
 label {
@@ -311,6 +367,7 @@ h1,
 h2,
 h3 {
     color: #eee;
+    text-align: center; /* Center headings within their container */
 }
 
 p {
@@ -324,7 +381,7 @@ p {
     margin-bottom: 5px;
 }
 
-/* Profile Picture Section (Existing styles, adding here for completeness) */
+/* Profile Picture Section (within .dashboard-section or directly in .main-content) */
 .profile-picture-section {
     background-color: #3a3a3a;
     padding: 20px;
@@ -332,11 +389,17 @@ p {
     margin-bottom: 20px;
     border: 1px solid #555;
     text-align: center;
+    box-sizing: border-box;
+    width: 100%; /* Take full width of its parent (e.g., .main-content or another wrapper) */
+    max-width: 400px; /* A good max-width for this specific section */
+    margin-left: auto;
+    margin-right: auto;
 }
 
 .profile-picture-section h3 {
     margin-top: 0;
     color: #eee;
+    text-align: center;
 }
 
 .profile-picture-preview {
@@ -351,6 +414,7 @@ p {
     margin-right: auto;
 }
 
+/* Fix for "Profile Preview" text inside the circle */
 .profile-picture-placeholder {
     width: 120px;
     height: 120px;
@@ -358,6 +422,7 @@ p {
     background-color: #555;
     color: #bbb;
     display: flex;
+    flex-direction: column; /* Allow text to stack if needed */
     justify-content: center;
     align-items: center;
     font-size: 0.9em;
@@ -366,6 +431,10 @@ p {
     margin-bottom: 15px;
     margin-left: auto;
     margin-right: auto;
+    line-height: 1.2; /* Adjust line height for multiline text */
+    padding: 5px; /* Add some padding to prevent text from hitting edges */
+    box-sizing: border-box;
+    word-break: break-word; /* Allow long words to break */
 }
 
 .upload-label {
@@ -384,7 +453,7 @@ p {
 }
 
 .profile-picture-section .dashboard-button {
-    margin-top: 15px;
+    margin-top: 15px; /* Space between select label and upload button */
 }
 
 .upload-message {
@@ -393,28 +462,49 @@ p {
     font-weight: bold;
 }
 
+
 /* --- Global Background Image (from your index.css, moved here for clarity with app styles) --- */
 html {
-    background-image: url('/school-logo.jpg'); /* Replace with your actual image path */
+    background-image: url('/image_ee81aa.jpg'); /* Using your provided background image */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Keeps background fixed when scrolling */
     background-color: #242424; /* Fallback for transparency */
 }
 
-/* --- Responsive adjustments (for mobile/tablet screens) --- */
+body {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 320px;
+    min-height: 100vh;
+}
+
+/* Responsive adjustments */
 @media (max-width: 768px) {
     .header-content {
         flex-direction: row; /* Keep logo and hamburger on the same row */
         justify-content: space-between; /* Space them out */
         align-items: center; /* Vertically align */
         flex-wrap: nowrap; /* Prevent wrapping in header-content itself */
+        overflow: hidden; /* Hide anything that goes beyond the content width */
+    }
+
+    .logo-link {
+        flex-shrink: 1; /* Allow logo link to shrink */
+        min-width: 0; /* Allow the content to shrink to fit */
     }
 
     .logo-link h1 {
         font-size: 1.2em; /* Slightly larger on tablet than phone */
-        max-width: 60vw; /* Adjust max-width to prevent overflow */
-        padding-right: 5px; /* Add some space before icon */
+        /*
+        The max-width here is critical. We need to reserve space for the logo
+        and the hamburger/nav links. A good rule of thumb is
+        calc(100% - [logo_width + hamburger_width + padding_between_them])
+        Let's estimate 40px for logo + 30px for hamburger + 10px margin = 80px
+        */
+        max-width: calc(100% - 100px); /* Adjusted for more safety */
+        padding-right: 5px; /* Add some space before icon/nav */
     }
     .school-logo {
         height: 35px; /* Adjust logo size for tablet */
@@ -441,6 +531,7 @@ html {
         transform: translateY(-100%); /* Start hidden above */
         opacity: 0; /* Start invisible */
         box-sizing: border-box; /* Include padding in width */
+        max-width: 100vw; /* Ensure it doesn't overflow viewport */
     }
 
     /* When mobile-menu-open class is active, display the navigation */
@@ -480,7 +571,8 @@ html {
     @media (max-width: 600px) {
         .logo-link h1 {
             font-size: 1.05em; /* Smaller font for phones */
-            max-width: calc(100% - 70px); /* Leave space for logo and hamburger */
+            /* Even tighter max-width for very small screens */
+            max-width: calc(100% - 70px); /* Adjusted for smaller logo/hamburger width */
             padding-right: 4px;
         }
         .school-logo {
@@ -496,6 +588,13 @@ html {
         max-width: 95%; /* Even wider on small screens if needed */
     }
 
+    /* Adjust inner sections on mobile */
+    .dashboard-section,
+    form,
+    .profile-picture-section {
+        max-width: 95%; /* Allow these to be wider on mobile */
+    }
+
     .footer-content {
         flex-direction: column;
         align-items: center;
@@ -505,5 +604,14 @@ html {
     .footer-section {
         min-width: unset;
         width: 90%;
+    }
+
+    /* Mobile background image adjustments */
+    html {
+        background-size: contain; /* Ensures the whole image is visible on mobile */
+        background-repeat: no-repeat;
+        background-position: top center;
+        background-attachment: scroll; /* Prevents overlay issues on mobile */
+        min-height: 100vh;
     }
 }
