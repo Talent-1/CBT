@@ -158,7 +158,7 @@ html {
   padding: 40px 20px; /* Add padding top/bottom */
   max-width: 800px; /* Re-apply max-width for forms/pages */
   margin: 20px auto; /* Center the content area */
-  background-color: rgba(45, 45, 45, 0.9); /* Slightly transparent dark background for content */
+  background-color: rgba(255, 255, 255, 0.9); /* Slightly transparent dark background for content */
   border-radius: 8px;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
