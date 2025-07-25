@@ -3,29 +3,26 @@
 const Result = require('../models/Result');
 const User = require('../models/User');
 const Exam = require('../models/Exam');
-const Question = require('../models/Question'); // Ensure this is imported
+const Question = require('../models/Question');
 
 // Helper Function 1: Counts correct answers for each subject from a list of answers
 // Input: result.answers (populated with question.subject._id and question.subject.subjectName)
-// Output: An object mapping subjectId (string) to { score: number }
+// Output: An object mapping subjectId (string) to { score: number, totalQuestions: number }
 const countCorrectAnswersPerSubject = (answers) => {
-    const subjectScores = {}; // Key: subjectId (string), Value: { score: number }
+    const subjectScoresAndCounts = {}; // Key: subjectId (string), Value: { score: number, totalQuestions: number }
 
     answers.forEach(answer => {
-        // Ensure question and subject are populated and has an _id and subjectName
-        // With the fix in Subject.js, subjectName should now be present.
         if (answer.question && answer.question.subject && answer.question.subject._id && answer.question.subject.subjectName) {
-            const subjectId = answer.question.subject._id.toString(); // Convert to string for consistent key usage
+            const subjectId = answer.question.subject._id.toString();
 
-            if (!subjectScores[subjectId]) {
-                subjectScores[subjectId] = { score: 0 };
+            if (!subjectScoresAndCounts[subjectId]) {
+                subjectScoresAndCounts[subjectId] = { score: 0, totalQuestions: 0 };
             }
+            subjectScoresAndCounts[subjectId].totalQuestions++; // Increment total questions for this subject
             if (answer.isCorrect) {
-                subjectScores[subjectId].score++;
+                subjectScoresAndCounts[subjectId].score++;
             }
         } else {
-            // This log will now be less frequent if the Subject.js fix works,
-            // but helpful if there's still missing data or population issues.
             console.warn("DEBUG (countCorrectAnswersPerSubject): Skipping answer due to missing question/subject data:", {
                 question: answer.question?._id,
                 subjectId: answer.question?.subject?._id,
@@ -34,74 +31,59 @@ const countCorrectAnswersPerSubject = (answers) => {
             });
         }
     });
-    console.log("DEBUG (countCorrectAnswersPerSubject): Raw counts per subject ID:", subjectScores);
-    return subjectScores;
+    console.log("DEBUG (countCorrectAnswersPerSubject): Raw scores and counts per subject ID:", subjectScoresAndCounts);
+    return subjectScoresAndCounts;
 };
 
 // Helper Function 2: Combines the counted scores with total questions from exam config
 // and calculates overall exam score and percentage.
-// Input: result (populated with exam and answers), countedSubjectScores (from Helper 1)
+// Input: result (populated with exam and answers), countedSubjectData (from Helper 1)
 // Output: { subject_scores_breakdown: array, calculated_total_score: number, calculated_percentage: number }
-const compileFinalSubjectAndOverallScores = (result, countedSubjectScores) => {
+const compileFinalSubjectAndOverallScores = (result, countedSubjectData) => {
     const finalSubjectScoresBreakdown = [];
-    let totalExamScore = 0; // This will be the sum of correct answers for subjects *configured* in the exam
-    let totalExamQuestions = 0; // This will be the sum of total questions for subjects *configured* in the exam
+    let calculatedTotalScore = 0; // This will be the sum of correct answers across all subjects answered
+    let calculatedTotalQuestionsAttempted = 0; // This will be the sum of all questions answered
 
-    // 1. Process subjects explicitly defined in the Exam's configuration (subjectsIncluded)
-    // This is the authoritative source for the *total possible questions* per subject.
-if (result.exam && result.exam.subjectsIncluded && Array.isArray(result.exam.subjectsIncluded)) {
-        result.exam.subjectsIncluded.forEach(examSubject => {
-            // Ensure examSubject.subjectId is populated and has _id, subjectName
-            // CHANGE THIS LINE:
-            // if (examSubject._id && examSubject.subjectName) {
-            // TO THIS:
-            if (examSubject.subjectId && typeof examSubject.subjectId === 'object' && examSubject.subjectId._id && examSubject.subjectId.subjectName) {
-                const subjectId = examSubject.subjectId._id.toString(); // Get ID from the *populated Subject*
-                const subjectName = examSubject.subjectId.subjectName; // Get name from the *populated Subject*
-                const totalQuestionsInSubject = examSubject.numberOfQuestions || 0;
+    // 1. Process subjects based on the questions actually answered by the student
+    // This is the most reliable source for the student's actual performance.
+    // We will build the breakdown using the countedSubjectData.
+    for (const subjectId in countedSubjectData) {
+        if (Object.hasOwnProperty.call(countedSubjectData, subjectId)) {
+            const { score, totalQuestions } = countedSubjectData[subjectId];
 
-                // ... rest of the logic is fine ...
-            } else {
-                // This warning indicates an issue with Exam model's subjectsIncluded data or its population
-                console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam subject config incomplete or not populated for exam ${result.exam._id} in subjectsIncluded array:`, examSubject);
-            }
-        });
-    }
-    // 2. Add any subjects that were answered but were *not* explicitly listed in exam.subjectsIncluded.
-    // This handles data inconsistencies where questions might exist for subjects not formally part of the exam config.
-    Object.keys(countedSubjectScores).forEach(subjectId => {
-        const isSubjectAlreadyInBreakdown = finalSubjectScoresBreakdown.some(s => {
-            // Check if this subjectId (from answers) is already represented in the breakdown
-            const originalExamSubject = result.exam?.subjectsIncluded?.find(es => es._id.toString() === subjectId);
-            return originalExamSubject ? true : false; // If found in exam config, it's already included
-        });
-
-        if (!isSubjectAlreadyInBreakdown) {
-            // This means a question for this subject was answered, but the subject
-            // was NOT explicitly part of the exam's subjectsIncluded configuration.
-            const subjectNameFromAnswer = result.answers.find(a => a.question.subject._id.toString() === subjectId)?.question.subject.subjectName || "Unknown Subject";
-            const score = countedSubjectScores[subjectId].score;
+            // Find the subject name from the populated result.answers
+            const subjectNameFromAnswers = result.answers.find(a =>
+                a.question?.subject?._id?.toString() === subjectId
+            )?.question?.subject?.subjectName || "Unknown Subject";
 
             finalSubjectScoresBreakdown.push({
-                subjectName: subjectNameFromAnswer,
+                subjectName: subjectNameFromAnswers,
                 score: score,
-                totalQuestionsInSubject: 0 // Cannot determine total if not in exam config
+                totalQuestionsInSubject: totalQuestions // Use the actual count from answers
             });
-            // IMPORTANT: DO NOT add score to totalExamScore or totalExamQuestions here.
-            // The overall exam score/percentage should reflect only the *configured* exam.
-        }
-    });
 
-    const percentage = totalExamQuestions > 0 ? (totalExamScore / totalExamQuestions) * 100 : 0;
+            calculatedTotalScore += score;
+            calculatedTotalQuestionsAttempted += totalQuestions;
+        }
+    }
+
+    // Sort the breakdown for consistent order
+    finalSubjectScoresBreakdown.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+
+    const percentage = calculatedTotalQuestionsAttempted > 0
+        ? parseFloat(((calculatedTotalScore / calculatedTotalQuestionsAttempted) * 100).toFixed(2))
+        : 0;
 
     console.log("DEBUG (compileFinalSubjectAndOverallScores): Final Subject Breakdown:", finalSubjectScoresBreakdown);
-    console.log("DEBUG (compileFinalSubjectAndOverallScores): Calculated Overall Score:", totalExamScore);
+    console.log("DEBUG (compileFinalSubjectAndOverallScores): Calculated Overall Score (from answers):", calculatedTotalScore);
+    console.log("DEBUG (compileFinalSubjectAndOverallScores): Calculated Overall Questions Attempted (from answers):", calculatedTotalQuestionsAttempted);
     console.log("DEBUG (compileFinalSubjectAndOverallScores): Calculated Percentage:", percentage);
 
     return {
         subject_scores_breakdown: finalSubjectScoresBreakdown,
-        calculated_total_score: totalExamScore,
-        calculated_percentage: percentage
+        calculated_total_score: calculatedTotalScore,
+        calculated_percentage: percentage,
+        calculated_total_questions_attempted: calculatedTotalQuestionsAttempted // New return value
     };
 };
 
@@ -157,28 +139,28 @@ exports.getAllResults = async (req, res) => {
         const results = await Result.find(resultQuery)
             .populate('user', 'fullName studentId classLevel section department')
             .populate({
-    path: 'exam',
-    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
-    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
-        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
-        model: 'Subject', // Specify the model if not inferrable (good practice)
-        select: 'subjectName _id' // Select the necessary fields from the Subject model
-    }
-})
+                path: 'exam',
+                select: 'title totalQuestionsCount subjectsIncluded',
+                populate: {
+                    path: 'subjectsIncluded.subjectId',
+                    model: 'Subject',
+                    select: 'subjectName _id'
+                }
+            })
             .populate({
-                path: 'answers.question', // Populate the 'question' field within the 'answers' array
-                select: 'subject',      // Only get the 'subject' field from the Question
-                populate: {             // Populate the 'subject' field within the Question
+                path: 'answers.question',
+                select: 'subject',
+                populate: {
                     path: 'subject',
-                    select: 'subjectName _id' // <--- CRUCIAL: Get subjectName and _id from Subject model
+                    select: 'subjectName _id'
                 }
             })
             .sort({ createdAt: -1 });
 
         // Transform results and calculate subject scores for each
         const transformedResults = results.map(result => {
-            const countedSubjectScores = countCorrectAnswersPerSubject(result.answers);
-            const { subject_scores_breakdown, calculated_total_score, calculated_percentage } = compileFinalSubjectAndOverallScores(result, countedSubjectScores);
+            const countedSubjectData = countCorrectAnswersPerSubject(result.answers);
+            const { subject_scores_breakdown, calculated_total_score, calculated_percentage, calculated_total_questions_attempted } = compileFinalSubjectAndOverallScores(result, countedSubjectData);
 
             return {
                 _id: result._id,
@@ -187,9 +169,9 @@ exports.getAllResults = async (req, res) => {
                 student_name: result.user?.fullName || 'Unknown User',
                 exam: result.exam ? result.exam._id : null,
                 exam_title: result.exam?.title || 'Unknown Exam',
-                // Use the calculated total score and percentage
+                // Use the calculated total score and percentage based on *answered questions*
                 score: calculated_total_score,
-                total_questions: result.exam?.totalQuestionsCount || 0, // Still use total from exam config
+                total_questions: calculated_total_questions_attempted, // Use the actual number of questions answered
                 percentage: calculated_percentage,
                 date_taken: result.dateTaken,
                 createdAt: result.createdAt,
@@ -221,15 +203,15 @@ exports.getUserResults = async (req, res) => {
         }
 
         const results = await Result.find({ user: req.user.id })
-           .populate({
-    path: 'exam',
-    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
-    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
-        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
-        model: 'Subject', // Specify the model if not inferrable (good practice)
-        select: 'subjectName _id' // Select the necessary fields from the Subject model
-    }
-})
+            .populate({
+                path: 'exam',
+                select: 'title totalQuestionsCount subjectsIncluded',
+                populate: {
+                    path: 'subjectsIncluded.subjectId',
+                    model: 'Subject',
+                    select: 'subjectName _id'
+                }
+            })
             .populate({
                 path: 'answers.question',
                 select: 'subject',
@@ -241,14 +223,14 @@ exports.getUserResults = async (req, res) => {
             .sort({ createdAt: -1 });
 
         const transformedResults = results.map(result => {
-            const countedSubjectScores = countCorrectAnswersPerSubject(result.answers);
-            const { subject_scores_breakdown, calculated_total_score, calculated_percentage } = compileFinalSubjectAndOverallScores(result, countedSubjectScores);
+            const countedSubjectData = countCorrectAnswersPerSubject(result.answers);
+            const { subject_scores_breakdown, calculated_total_score, calculated_percentage, calculated_total_questions_attempted } = compileFinalSubjectAndOverallScores(result, countedSubjectData);
 
             return {
                 _id: result._id,
                 exam_name: result.exam?.title || 'Unknown Exam',
                 score: calculated_total_score,
-                total_questions: result.exam?.totalQuestionsCount || 0,
+                total_questions: calculated_total_questions_attempted, // Use the actual number of questions answered
                 percentage: calculated_percentage,
                 date_taken: result.dateTaken,
                 answers: result.answers, // You might not need all answers on frontend, but keeping for now
@@ -275,14 +257,14 @@ exports.getSingleResult = async (req, res) => {
                 select: 'fullName studentId classLevel section department'
             })
             .populate({
-    path: 'exam',
-    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
-    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
-        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
-        model: 'Subject', // Specify the model if not inferrable (good practice)
-        select: 'subjectName _id' // Select the necessary fields from the Subject model
-    }
-})
+                path: 'exam',
+                select: 'title totalQuestionsCount subjectsIncluded',
+                populate: {
+                    path: 'subjectsIncluded.subjectId',
+                    model: 'Subject',
+                    select: 'subjectName _id'
+                }
+            })
             .populate({
                 path: 'answers.question',
                 select: 'questionText options correctOption subject',
@@ -301,17 +283,17 @@ exports.getSingleResult = async (req, res) => {
             return res.status(403).json({ message: 'Access denied. You can only view your own results.' });
         }
 
-        const countedSubjectScores = countCorrectAnswersPerSubject(result.answers);
-        const { subject_scores_breakdown, calculated_total_score, calculated_percentage } = compileFinalSubjectAndOverallScores(result, countedSubjectScores);
+        const countedSubjectData = countCorrectAnswersPerSubject(result.answers);
+        const { subject_scores_breakdown, calculated_total_score, calculated_percentage, calculated_total_questions_attempted } = compileFinalSubjectAndOverallScores(result, countedSubjectData);
 
         res.status(200).json({
             _id: result._id,
             user: result.user,
             exam: result.exam,
-            score: calculated_total_score, // Use the newly calculated score
-            totalQuestions: result.exam?.totalQuestionsCount || 0, // Keep total from exam config
-            percentage: calculated_percentage, // Use the newly calculated percentage
-            answers: result.answers, // Include detailed answers for review
+            score: calculated_total_score,
+            totalQuestions: calculated_total_questions_attempted, // Use actual questions answered
+            percentage: calculated_percentage,
+            answers: result.answers,
             dateTaken: result.dateTaken,
             subject_scores_breakdown: subject_scores_breakdown
         });
