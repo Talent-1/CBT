@@ -1,185 +1,257 @@
 /* cbt-frontend/src/App.css */
 
-/* Global App Container and Root Styling (from your previous App.css and index.css for consistency) */
+/* Global App Container and Root Styling */
 #root {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* Make root fill viewport height */
-  width: 100%;
-  max-width: none; /* Allow root to take full width as per index.css setup */
-  margin: 0;
-  padding: 0; /* Remove root padding to allow header/footer to go edge-to-edge */
-  text-align: center;
-  background-color: rgba(132, 226, 163, 0.6); /* Semi-transparent overlay for readability */
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Make root fill viewport height */
+    width: 100%;
+    max-width: none; /* Allow root to take full width as per index.css setup */
+    margin: 0;
+    padding: 0; /* Remove root padding to allow header/footer to go edge-to-edge */
+    text-align: center;
+    background-color: rgba(132, 226, 163, 0.6); /* Semi-transparent overlay for readability */
 }
 
 .app-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  min-height: 100vh; /* Ensure it also fills height */
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 100vh; /* Ensure it also fills height */
 }
-
 
 /* --- Header Styling --- */
 .app-header {
-  background-color: #005600; /* DEEP GREEN BACKGROUND as requested */
-  padding: 10px 20px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-  color: white;
-  width: 100%;
-  /* Make header itself a flex container to center its content */
-  display: flex;
-  justify-content: center; /* Centers the header-content horizontally */
-  align-items: center;
-  min-height: 70px; /* Give it some minimum height */
+    background-color: #005600; /* DEEP GREEN BACKGROUND as requested */
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    color: white;
+    width: 100%;
+    display: flex; /* Make header itself a flex container to center its content */
+    justify-content: center; /* Centers the header-content horizontally */
+    align-items: center;
+    min-height: 70px; /* Give it some minimum height */
+    position: sticky; /* Make header sticky */
+    top: 0;
+    z-index: 50; /* Ensure it stays on top of other content */
 }
 
 .header-content {
-  display: flex;
-  justify-content: space-between; /* Pushes logo/title to left, nav to right */
-  align-items: center;
-  max-width: 1200px; /* Constrain content width for larger screens */
-  width: 100%; /* Ensure it takes full width within app-header */
-  margin: 0; /* Remove auto margin as app-header centers it */
+    display: flex;
+    justify-content: space-between; /* Pushes logo/title to left, nav to right */
+    align-items: center;
+    max-width: 1200px; /* Constrain content width for larger screens */
+    width: 100%; /* Ensure it takes full width within app-header */
+    margin: 0; /* Remove auto margin as app-header centers it */
 }
 
 .logo-link {
-  display: flex;
-  align-items: center;
-  text-decoration: none;
-  color: white;
-  font-size: 1.5em;
-  font-weight: bold;
-  white-space: nowrap; /* Prevent school name from wrapping */
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+    color: white;
+    font-size: 1.5em; /* Base font size, adjust h1 separately if needed */
+    font-weight: bold;
+    flex-shrink: 0; /* Prevent it from shrinking */
+    padding-right: 10px; /* Add some space before hamburger if present */
 }
 
 .school-logo {
-  height: 40px; /* Adjust as needed */
-  margin-right: 10px;
+    height: 40px; /* Adjust as needed */
+    margin-right: 10px;
 }
 
-.header-content h1 {
-  margin: 0; /* Remove default margin */
-  font-size: 1.8em; /* Adjust font size */
-  white-space: nowrap; /* Prevent school name from wrapping */
+.logo-link h1 { /* Target the h1 inside logo-link */
+    margin: 0; /* Remove default margin */
+    font-size: 1.8em; /* Adjust font size */
+    white-space: nowrap; /* Prevent school name from wrapping */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis for hidden text */
+    line-height: 1; /* Ensure it takes up minimal vertical space */
 }
 
+/* Hamburger Menu Icon */
+.hamburger-menu-icon-container {
+    display: none; /* Hidden by default on desktop */
+}
+
+.hamburger-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 25px;
+    padding: 0;
+    z-index: 100; /* Ensure button is on top */
+}
+
+.hamburger-line {
+    width: 100%;
+    height: 3px;
+    background-color: white;
+    transition: all 0.3s ease-in-out;
+    border-radius: 2px;
+}
+
+/* Hamburger X animation */
+.hamburger-line:nth-child(1).open {
+    transform: translateY(11px) rotate(45deg);
+}
+
+.hamburger-line:nth-child(2).open {
+    opacity: 0;
+}
+
+.hamburger-line:nth-child(3).open {
+    transform: translateY(-11px) rotate(-45deg);
+}
+
+/* Main Navigation (Desktop State) */
 .main-nav {
-  display: flex; /* KEY FIX: Makes its children flow horizontally */
-  align-items: center; /* Vertically centers menu items */
-  gap: 25px; /* Adds consistent spacing between menu items */
-  margin-left: auto; /* Pushes the nav block to the far right within header-content */
-  font-size: 1.1em; /* Adjust font size for menu items */
-  flex-wrap: wrap; /* Allow items to wrap to the next line on smaller screens */
-  justify-content: flex-end; /* Align items to the right if they wrap */
+    display: flex; /* Default to flex for desktop */
+    align-items: center; /* Vertically centers menu items */
+    gap: 25px; /* Adds consistent spacing between menu items */
+    margin-left: auto; /* Pushes the nav block to the far right within header-content */
+    font-size: 1.1em; /* Adjust font size for menu items */
+    flex-wrap: nowrap; /* Prevent wrapping on desktop */
+    justify-content: flex-end; /* Align items to the right */
+}
+
+/* This is if your navigation uses <ul> directly inside <nav>.
+   If you have a flat list of <Link>s/buttons, you might not need this. */
+.main-nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: row; /* Desktop default */
+    gap: 25px;
 }
 
 .welcome-message {
-  color: #add8e6; /* A lighter color for welcome message for better contrast */
-  white-space: nowrap; /* Prevent the welcome message from wrapping */
-  font-size: 0.9em; /* Smaller font for welcome message */
+    color: #add8e6; /* A lighter color for welcome message for better contrast */
+    white-space: nowrap; /* Prevent the welcome message from wrapping */
+    font-size: 0.9em; /* Smaller font for welcome message */
 }
 
 .main-nav a,
 .main-nav button {
-  color: white;
-  text-decoration: none;
-  padding: 8px 15px;
-  border-radius: 5px;
-  transition: background-color 0.3s ease;
-  background-color: transparent;
-  border: none;
-  font-size: 1em;
-  cursor: pointer;
-  white-space: nowrap; /* Prevent links/buttons from wrapping their text */
+    color: white;
+    text-decoration: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+    background-color: transparent;
+    border: none;
+    font-size: 1em;
+    cursor: pointer;
+    white-space: nowrap; /* Prevent links/buttons from wrapping their text */
+    text-align: left; /* Default text alignment */
+    display: block; /* Make links/buttons take full width of mobile menu */
+    width: auto; /* Default width for desktop */
 }
 
 .main-nav a:hover,
 .main-nav button:hover {
-  background-color: #007bff; /* Highlight on hover */
+    background-color: #007bff; /* Highlight on hover */
 }
 
 .logout-button {
-  background-color: #dc3545; /* Red logout button */
+    background-color: #dc3545; /* Red logout button */
 }
 
 .logout-button:hover {
-  background-color: #c82333;
+    background-color: #c82333;
 }
 
+.login-button {
+    background-color: #007bff;
+}
+
+.login-button:hover {
+    background-color: #0056b3;
+}
+
+.register-button { /* Added style for Register button */
+    background-color: #28a745;
+}
+.register-button:hover {
+    background-color: #218838;
+}
 
 /* --- Main Content Area --- */
 .main-content {
-  flex-grow: 1; /* Allows main content to take up available space */
-  padding: 40px 20px; /* Add padding top/bottom */
-  max-width: 800px; /* Re-apply max-width for forms/pages */
-  margin: 20px auto; /* Center the content area */
-  background-color: rgba(45, 45, 45, 0.9); /* Slightly transparent dark background for content */
-  border-radius: 8px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    flex-grow: 1; /* Allows main content to take up available space */
+    padding: 40px 20px; /* Add padding top/bottom */
+    max-width: 800px; /* Re-apply max-width for forms/pages */
+    margin: 20px auto; /* Center the content area */
+    background-color: rgba(45, 45, 45, 0.9); /* Slightly transparent dark background for content */
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
 }
-
 
 /* --- Footer Styling --- */
 .app-footer {
-  background-color: #1a1a1a;
-  color: white;
-  padding: 20px;
-  box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
-  width: 100%;
-  margin-top: auto; /* Pushes footer to the bottom */
+    background-color: #1a1a1a;
+    color: white;
+    padding: 20px;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.3);
+    width: 100%;
+    margin-top: auto; /* Pushes footer to the bottom */
 }
 
 .footer-content {
-  display: flex;
-  flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
-  justify-content: space-around;
-  align-items: flex-start;
-  max-width: 1200px;
-  margin: 0 auto;
-  text-align: left;
+    display: flex;
+    flex-wrap: wrap; /* Allow sections to wrap on smaller screens */
+    justify-content: space-around;
+    align-items: flex-start;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: left;
 }
 
 .footer-section {
-  flex: 1; /* Distribute space */
-  min-width: 250px; /* Minimum width before wrapping */
-  margin: 10px;
+    flex: 1; /* Distribute space */
+    min-width: 250px; /* Minimum width before wrapping */
+    margin: 10px;
 }
 
 .footer-section h3 {
-  color: #007bff; /* Highlight footer headings */
-  margin-bottom: 10px;
+    color: #007bff; /* Highlight footer headings */
+    margin-bottom: 10px;
 }
 
 .footer-section ul {
-  list-style: none;
-  padding: 0;
+    list-style: none;
+    padding: 0;
 }
 
 .footer-section ul li {
-  margin-bottom: 5px;
+    margin-bottom: 5px;
 }
 
 .footer-section a {
-  color: #bbb;
-  text-decoration: none;
-  transition: color 0.3s ease;
+    color: #bbb;
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
 
 .footer-section a:hover {
-  color: #007bff;
+    color: #007bff;
 }
 
 .footer-section p {
-  margin-bottom: 5px;
-  color: #bbb;
-  font-size: 0.9em;
+    margin-bottom: 5px;
+    color: #bbb;
+    font-size: 0.9em;
 }
 
 .company-logo {
-  height: 30px; /* Adjust as needed */
-  margin-top: 10px;
+    height: 30px; /* Adjust as needed */
+    margin-top: 10px;
 }
 
 /* General Form and Input Styles */
@@ -187,138 +259,201 @@ input,
 button,
 textarea,
 select {
-  padding: 10px;
-  margin: 5px 0; /* Adjust margin for consistency */
-  border-radius: 5px;
-  border: 1px solid #555;
-  background-color: #444;
-  color: white;
-  width: calc(100% - 20px); /* Adjust width to fit container with padding */
-  box-sizing: border-box; /* Include padding and border in element's total width */
+    padding: 10px;
+    margin: 5px 0; /* Adjust margin for consistency */
+    border-radius: 5px;
+    border: 1px solid #555;
+    background-color: #444;
+    color: white;
+    width: calc(100% - 20px); /* Adjust width to fit container with padding */
+    box-sizing: border-box; /* Include padding and border in element's total width */
 }
 
 button {
-  cursor: pointer;
-  background-color: #007bff;
-  border-color: #007bff;
+    cursor: pointer;
+    background-color: #007bff;
+    border-color: #007bff;
 }
 
 button:hover {
-  background-color: #0056b3;
+    background-color: #0056b3;
 }
 
 form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  width: 100%;
-  max-width: 400px;
-  margin: 20px auto;
-  padding: 20px;
-  border: 1px solid #555;
-  border-radius: 8px;
-  background-color: #2d2d2d;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    max-width: 400px;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #555;
+    border-radius: 8px;
+    background-color: #2d2d2d;
 }
 
 label {
-  align-self: flex-start;
-  color: #ddd;
+    align-self: flex-start;
+    color: #ddd;
 }
 
 h1,
 h2,
 h3 {
-  color: #eee;
-}
-
-p {
-  color: #bbb;
-}
-
-.error-message {
-  color: #ff4d4d;
-  font-size: 0.9em;
-  margin-top: -5px;
-  margin-bottom: 5px;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-}
-  .main-nav {
-    margin-top: 10px;
-    width: 100%;
-    justify-content: center; }
-  
-    .profile-picture-section {
-    background-color: #3a3a3a;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border: 1px solid #555;
-    text-align: center; /* Center content within this section */
-}
-
-.profile-picture-section h3 {
-    margin-top: 0;
     color: #eee;
 }
 
-.profile-picture-preview {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%; /* Makes it round */
-    object-fit: cover; /* Ensures image covers the area */
-    border: 3px solid #007bff; /* A nice border color */
-    margin-bottom: 15px;
-    display: block; /* Centers the image */
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.profile-picture-placeholder {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
-    background-color: #555;
+p {
     color: #bbb;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+}
+
+.error-message {
+    color: #ff4d4d;
     font-size: 0.9em;
-    text-align: center;
-    border: 3px dashed #007bff;
-    margin-bottom: 15px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-top: -5px;
+    margin-bottom: 5px;
 }
 
-.upload-label {
-    display: inline-block; /* Make it look like a button */
-    background-color: #007bff;
-    color: white;
-    padding: 10px 15px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin-top: 10px;
-    transition: background-color 0.3s ease;
-}
+/* --- Responsive adjustments (for mobile/tablet screens) --- */
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: row; /* Keep logo and hamburger on the same row */
+        justify-content: space-between; /* Space them out */
+        align-items: center; /* Vertically align */
+        flex-wrap: nowrap; /* Prevent wrapping in header-content itself */
+    }
 
-.upload-label:hover {
-    background-color: #0056b3;
-}
+    /* Show hamburger icon on small screens */
+    .hamburger-menu-icon-container {
+        display: block; /* Make hamburger icon visible */
+    }
 
-/* Style for the actual upload button */
-.profile-picture-section .dashboard-button {
-    margin-top: 15px; /* Space between select label and upload button */
-}
+    /* Hide desktop navigation by default on small screens */
+    .main-nav {
+        display: none; /* Hidden by default */
+        flex-direction: column; /* Stack links vertically */
+        position: absolute; /* Position relative to .app-header */
+        top: 70px; /* Position below header (adjust if header height changes) */
+        left: 0;
+        width: 100%;
+        background-color: #005600; /* Same as header background */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        padding: 20px;
+        z-index: 40; /* Below hamburger button, above main content */
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out; /* Smooth slide & fade effect */
+        transform: translateY(-100%); /* Start hidden above */
+        opacity: 0; /* Start invisible */
+        box-sizing: border-box; /* Include padding in width */
+    }
 
-.upload-message {
-    color: #28a745; /* Green for success */
-    margin-top: 10px;
-    font-weight: bold;
+    /* When mobile-menu-open class is active, display the navigation */
+    .main-nav.mobile-menu-open {
+        display: flex; /* Show as flex column */
+        transform: translateY(0); /* Slide into view */
+        opacity: 1; /* Fade in */
+    }
+
+    /* Make individual links/buttons take full width in mobile menu */
+    .main-nav a,
+    .main-nav button {
+        width: 100%;
+        text-align: center; /* Center their text */
+        margin-bottom: 10px; /* Add space between menu items */
+        padding: 12px 0; /* More vertical padding for mobile links */
+    }
+
+    .main-nav .welcome-message {
+        width: 100%; /* Ensure welcome message takes full width */
+        text-align: center;
+        margin-bottom: 10px;
+        margin-top: 5px;
+    }
+
+    /* Ensure ul within nav also stacks vertically on mobile if present */
+    .main-nav ul {
+        flex-direction: column;
+        width: 100%;
+        align-items: center;
+        gap: 10px; /* Adjust gap for mobile */
+    }
+
+    /* Profile picture section and other general styles should be outside the media query unless they need specific mobile adjustments */
+    .profile-picture-section {
+        background-color: #3a3a3a;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #555;
+        text-align: center;
+    }
+
+    .profile-picture-section h3 {
+        margin-top: 0;
+        color: #eee;
+    }
+
+    .profile-picture-preview {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid #007bff;
+        margin-bottom: 15px;
+        display: block;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .profile-picture-placeholder {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background-color: #555;
+        color: #bbb;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 0.9em;
+        text-align: center;
+        border: 3px dashed #007bff;
+        margin-bottom: 15px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .upload-label {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: background-color 0.3s ease;
+    }
+
+    .upload-label:hover {
+        background-color: #0056b3;
+    }
+
+    .profile-picture-section .dashboard-button {
+        margin-top: 15px;
+    }
+
+    .upload-message {
+        color: #28a745;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+
+    /* Adjust main content and footer for smaller screens if needed */
+    .main-content {
+        padding: 20px 15px; /* Adjust padding for smaller screens */
+        margin-top: 10px; /* Adjust margin-top for consistency */
+    }
+
+    .footer-section {
+        min-width: 100%; /* Stack footer sections on very small screens */
+        text-align: center;
+    }
 }
