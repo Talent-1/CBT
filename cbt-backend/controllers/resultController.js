@@ -49,36 +49,24 @@ const compileFinalSubjectAndOverallScores = (result, countedSubjectScores) => {
 
     // 1. Process subjects explicitly defined in the Exam's configuration (subjectsIncluded)
     // This is the authoritative source for the *total possible questions* per subject.
-    if (result.exam && result.exam.subjectsIncluded && Array.isArray(result.exam.subjectsIncluded)) {
+if (result.exam && result.exam.subjectsIncluded && Array.isArray(result.exam.subjectsIncluded)) {
         result.exam.subjectsIncluded.forEach(examSubject => {
-            // Ensure examSubject has _id, subjectName, and numberOfQuestions
-            if (examSubject._id && examSubject.subjectName) {
-                const subjectId = examSubject._id.toString(); // Consistent string conversion
-                const subjectName = examSubject.subjectName;
+            // Ensure examSubject.subjectId is populated and has _id, subjectName
+            // CHANGE THIS LINE:
+            // if (examSubject._id && examSubject.subjectName) {
+            // TO THIS:
+            if (examSubject.subjectId && typeof examSubject.subjectId === 'object' && examSubject.subjectId._id && examSubject.subjectId.subjectName) {
+                const subjectId = examSubject.subjectId._id.toString(); // Get ID from the *populated Subject*
+                const subjectName = examSubject.subjectId.subjectName; // Get name from the *populated Subject*
                 const totalQuestionsInSubject = examSubject.numberOfQuestions || 0;
 
-                // Retrieve the score for this subject using its ID from the counted scores
-                const scoreForSubject = countedSubjectScores[subjectId]
-                                       ? countedSubjectScores[subjectId].score
-                                       : 0;
-
-                finalSubjectScoresBreakdown.push({
-                    subjectName: subjectName,
-                    score: scoreForSubject, // This should now correctly reflect the counted score
-                    totalQuestionsInSubject: totalQuestionsInSubject
-                });
-
-                // Only add to overall exam score/questions if they are part of the exam's official configuration
-                totalExamScore += scoreForSubject;
-                totalExamQuestions += totalQuestionsInSubject;
+                // ... rest of the logic is fine ...
             } else {
-                console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam subject config incomplete for exam ${result.exam._id}:`, examSubject);
+                // This warning indicates an issue with Exam model's subjectsIncluded data or its population
+                console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam subject config incomplete or not populated for exam ${result.exam._id} in subjectsIncluded array:`, examSubject);
             }
         });
-    } else {
-        console.warn(`DEBUG (compileFinalSubjectAndOverallScores): Exam ${result.exam?._id} has no subjectsIncluded array or it's not an array.`);
     }
-
     // 2. Add any subjects that were answered but were *not* explicitly listed in exam.subjectsIncluded.
     // This handles data inconsistencies where questions might exist for subjects not formally part of the exam config.
     Object.keys(countedSubjectScores).forEach(subjectId => {
@@ -169,9 +157,14 @@ exports.getAllResults = async (req, res) => {
         const results = await Result.find(resultQuery)
             .populate('user', 'fullName studentId classLevel section department')
             .populate({
-                path: 'exam',
-                select: 'title totalQuestionsCount subjectsIncluded' // subjectsIncluded is needed
-            })
+    path: 'exam',
+    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
+    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
+        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
+        model: 'Subject', // Specify the model if not inferrable (good practice)
+        select: 'subjectName _id' // Select the necessary fields from the Subject model
+    }
+})
             .populate({
                 path: 'answers.question', // Populate the 'question' field within the 'answers' array
                 select: 'subject',      // Only get the 'subject' field from the Question
@@ -228,10 +221,15 @@ exports.getUserResults = async (req, res) => {
         }
 
         const results = await Result.find({ user: req.user.id })
-            .populate({
-                path: 'exam',
-                select: 'title totalQuestionsCount subjectsIncluded'
-            })
+           .populate({
+    path: 'exam',
+    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
+    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
+        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
+        model: 'Subject', // Specify the model if not inferrable (good practice)
+        select: 'subjectName _id' // Select the necessary fields from the Subject model
+    }
+})
             .populate({
                 path: 'answers.question',
                 select: 'subject',
@@ -277,9 +275,14 @@ exports.getSingleResult = async (req, res) => {
                 select: 'fullName studentId classLevel section department'
             })
             .populate({
-                path: 'exam',
-                select: 'title totalQuestionsCount subjectsIncluded'
-            })
+    path: 'exam',
+    select: 'title totalQuestionsCount subjectsIncluded', // Still select the array
+    populate: { // NESTED POPULATE FOR subjectsIncluded.subjectId
+        path: 'subjectsIncluded.subjectId', // Path to the reference in the sub-document
+        model: 'Subject', // Specify the model if not inferrable (good practice)
+        select: 'subjectName _id' // Select the necessary fields from the Subject model
+    }
+})
             .populate({
                 path: 'answers.question',
                 select: 'questionText options correctOption subject',
