@@ -8,6 +8,11 @@ const examSchema = new mongoose.Schema({
         trim: true
     },
     // --- NEW: subjectsIncluded array for Unit Exams ---
+    isActive: {
+        type: Boolean,
+        default: false // Exams are inactive by default when created
+    },
+    
     subjectsIncluded: [{ 
         subjectId: {
             type: mongoose.Schema.Types.ObjectId,
