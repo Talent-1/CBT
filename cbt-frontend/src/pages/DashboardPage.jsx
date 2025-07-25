@@ -1,4 +1,4 @@
-// cbt-frontend/src/pages/DashboardPage.jsx (MODIFIED - isActive checks removed)
+// cbt-frontend/src/pages/DashboardPage.jsx (CORRECTED)
 import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
@@ -45,13 +45,16 @@ function DashboardPage() {
             const fetchedExams = await getStudentExams(user.classLevel, user.branchId, department);
             setUpcomingExams(fetchedExams);
 
-            // This now only checks payment eligibility for the overall message
+            // This now checks both payment eligibility and active status for the overall message
             const requiresPayment = fetchedExams.some(exam => !exam.isPaymentEligibleForExam);
+            const hasInactiveExams = fetchedExams.some(exam => !exam.isActive); // Check if any exam is inactive
 
             if (requiresPayment) {
                 setOverallPaymentStatusMessage('Payment Required: You need to settle your outstanding fees to access all exams.');
+            } else if (hasInactiveExams) {
+                 setOverallPaymentStatusMessage('Some exams are currently inactive. Please check with your administrator.');
             } else if (fetchedExams.length > 0) {
-                setOverallPaymentStatusMessage('Cleared for Exams: All your payments are up-to-date.');
+                setOverallPaymentStatusMessage('Cleared for Exams: All your payments are up-to-date and exams are active.');
             } else {
                 setOverallPaymentStatusMessage('No exams found for your current eligibility.');
             }
@@ -73,7 +76,12 @@ function DashboardPage() {
     }, [user, fetchUpcomingExams]);
 
     // Handles navigating to the Exam Instructions page
-    const handleStartExam = (examId, isPaymentEligibleForExam) => { // ⭐ isActive parameter REMOVED
+    const handleStartExam = (examId, isPaymentEligibleForExam, isActive) => { // ⭐ ADD isActive PARAMETER
+        if (!isActive) { // ⭐ NEW CHECK
+            setError('This exam is currently inactive and cannot be started. Please contact administration.');
+            setUploadMessage('');
+            return;
+        }
         if (!isPaymentEligibleForExam) {
             setError('You must have a successful payment status to take this exam. Please make a payment or contact administration.');
             setUploadMessage('');
@@ -209,7 +217,10 @@ function DashboardPage() {
                 .start-exam-button:disabled {
                     @apply bg-gray-500 cursor-not-allowed;
                 }
-                /* REMOVED: Style for inactive exam button */
+                /* ⭐ NEW: Style for inactive exam button */
+                .start-exam-button.inactive {
+                    @apply bg-red-700 hover:bg-red-800;
+                }
                 .payment-status-message {
                     @apply text-lg font-semibold text-center mt-4 mb-4 p-3 rounded-lg;
                 }
@@ -276,7 +287,7 @@ function DashboardPage() {
                         <h2>Your Upcoming Exams</h2>
 
                         {overallPaymentStatusMessage && (
-                            <p className={`payment-status-message ${overallPaymentStatusMessage.includes('Payment Required') ? 'payment-status-required' : 'payment-status-cleared'}`}>
+                            <p className={`payment-status-message ${overallPaymentStatusMessage.includes('Payment Required') || overallPaymentStatusMessage.includes('inactive') ? 'payment-status-required' : 'payment-status-cleared'}`}>
                                 {overallPaymentStatusMessage}
                             </p>
                         )}
@@ -294,19 +305,25 @@ function DashboardPage() {
                                         <p><strong>Class:</strong> {exam.classLevel}</p>
                                         <p><strong>Duration:</strong> {exam.duration} minutes</p>
                                         <p><strong>Total Questions:</strong> {exam.totalQuestions}</p>
-                                        {/* Removed: Display exam status */}
+                                        <p><strong>Status:</strong> <span className={exam.isActive ? 'text-green-400' : 'text-red-400'}>{exam.isActive ? 'Active' : 'Inactive'}</span></p> {/* Display exam status */}
                                         <button
-                                            onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam)} // ⭐ isActive parameter REMOVED
-                                            className={`start-exam-button ${!exam.isPaymentEligibleForExam ? 'inactive' : ''}`} // ⭐ isActive class REMOVED
-                                            disabled={!exam.isPaymentEligibleForExam} // ⭐ !exam.isActive REMOVED from disabled
+                                            onClick={() => handleStartExam(exam._id, exam.isPaymentEligibleForExam, exam.isActive)} // ⭐ PASS isActive HERE
+                                            className={`start-exam-button ${!exam.isPaymentEligibleForExam || !exam.isActive ? 'inactive' : ''}`} // ⭐ ADD INACTIVE CLASS
+                                            disabled={!exam.isPaymentEligibleForExam || !exam.isActive} // ⭐ ADD !exam.isActive TO DISABLED
                                         >
-                                            {/* Removed: Conditional button text based on isActive */}
-                                            {exam.isPaymentEligibleForExam ? 'Start Exam' : 'Payment Required'}
+                                            {exam.isActive ? ( // ⭐ CONDITIONAL BUTTON TEXT
+                                                exam.isPaymentEligibleForExam ? 'Start Exam' : 'Payment Required'
+                                            ) : (
+                                                'Exam Inactive'
+                                            )}
                                         </button>
                                         {!exam.isPaymentEligibleForExam && (
                                             <p className="text-red-400 text-sm mt-2">Settle fees to access this exam.</p>
                                         )}
-                                        {/* Removed: Message if exam is inactive */}
+                                        {/* ⭐ NEW: Message if exam is inactive */}
+                                        {!exam.isActive && (
+                                            <p className="text-red-400 text-sm mt-2">This exam is currently inactive.</p>
+                                        )}
                                     </div>
                                 ))}
                             </div>
