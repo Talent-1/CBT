@@ -1,236 +1,235 @@
 /* cbt-frontend/src/style/AdminDashboard.css (MODIFIED - Added Filter Styles) */
 
 .container {
-    padding: 30px;
-    max-width: 1200px;
-    margin: 20px auto;
-    background-color: #f8f9fa;
-    border-radius: 10px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
-    color: #333;
+ padding: 30px;
+ max-width: 1200px;
+ margin: 20px auto;
+ background-color: #f8f9fa;
+ border-radius: 10px;
+ box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+ font-family: Arial, sans-serif;
+ color: #333;
 }
 
 .header {
-    text-align: center;
-    color: #0056b3;
-    margin-bottom: 30px;
-    font-size: 2.5em;
-    font-weight: bold;
-    text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+ text-align: center;
+ color: #0056b3;
+ margin-bottom: 30px;
+ font-size: 2.5em;
+ font-weight: bold;
+ text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
 }
 
 .logoutButton {
-    display: block;
-    margin: 0 auto 30px auto;
-    padding: 10px 20px;
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 1em;
-    transition: background-color 0.3s ease;
+ display: block;
+ margin: 0 auto 30px auto;
+ padding: 10px 20px;
+ background-color: #dc3545;
+ color: white;
+ border: none;
+ border-radius: 5px;
+ cursor: pointer;
+ font-size: 1em;
+ transition: background-color 0.3s ease;
 }
 
 .logoutButton:hover {
-    background-color: #c82333;
+ background-color: #c82333;
 }
 
 .loadingMessage, .errorMessage, .successMessage {
-    text-align: center;
-    padding: 15px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    font-weight: bold;
+ text-align: center;
+ padding: 15px;
+ border-radius: 8px;
+ margin-bottom: 20px;
+ font-weight: bold;
 }
 
 .loadingMessage {
-    background-color: #e0f7fa;
-    color: #007bff;
-    border: 1px solid #b2ebf2;
+ background-color: #e0f7fa;
+ color: #007bff;
+ border: 1px solid #b2ebf2;
 }
 
 .errorMessage {
-    background-color: #f8d7da;
-    color: #dc3545;
-    border: 1px solid #f5c6cb;
+ background-color: #f8d7da;
+ color: #dc3545;
+ border: 1px solid #f5c6cb;
 }
 
 .successMessage {
-    background-color: #d4edda;
-    color: #28a745;
-    border: 1px solid #c3e6cb;
+ background-color: #d4edda;
+ color: #28a745;
+ border: 1px solid #c3e6cb;
 }
 
 .section {
-    background-color: #ffffff;
-    border-radius: 8px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 25px;
-    margin-bottom: 30px;
+ background-color: #ffffff;
+ border-radius: 8px;
+ box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+ padding: 25px;
+ margin-bottom: 30px;
 }
 
 .sectionHeader {
-    color: #0056b3;
-    font-size: 1.8em;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #007bff;
-    padding-bottom: 10px;
+ color: #0056b3;
+ font-size: 1.8em;
+ margin-bottom: 20px;
+ border-bottom: 2px solid #007bff;
+ padding-bottom: 10px;
 }
 
 .form .formGroup {
-    margin-bottom: 15px;
+ margin-bottom: 15px;
 }
 
 .form .label {
-    display: block;
-    margin-bottom: 8px;
-    font-weight: bold;
-    color: #555;
+ display: block;
+ margin-bottom: 8px;
+ font-weight: bold;
+ color: #555;
 }
 
 .form .input,
 .form .textarea,
 .form .select {
-    width: calc(100% - 22px);
-    padding: 10px;
-    border: 1px solid #ced4da;
-    border-radius: 5px;
-    font-size: 1em;
-    box-sizing: border-box;
+ width: calc(100% - 22px);
+ padding: 10px;
+ border: 1px solid #ced4da;
+ border-radius: 5px;
+ font-size: 1em;
+ box-sizing: border-box;
 }
 
 .form .textarea {
-    resize: vertical;
+ resize: vertical;
 }
 
 .form .input:focus,
 .form .textarea:focus,
 .form .select:focus {
-    border-color: #007bff;
-    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
-    outline: none;
+ border-color: #007bff;
+ box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+ outline: none;
 }
 
 .form .submitButton {
-    display: block;
-    width: 100%;
-    padding: 12px 20px;
-    background-color: #28a745; /* Green for submit */
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 1.1em;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin-top: 20px;
+ display: block;
+ width: 100%;
+ padding: 12px 20px;
+ background-color: #28a745; /* Green for submit */
+ color: white;
+ border: none;
+ border-radius: 5px;
+ font-size: 1.1em;
+ cursor: pointer;
+ transition: background-color 0.3s ease;
+ margin-top: 20px;
 }
 
 .form .submitButton:hover {
-    background-color: #218838;
+ background-color: #218838;
 }
 
 .subjectGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 15px;
-    margin-top: 10px;
-    padding: 10px;
-    border: 1px solid #e9ecef;
-    border-radius: 5px;
-    background-color: #f8f9fa;
+ display: grid;
+ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+ gap: 15px;
+ margin-top: 10px;
+ padding: 10px;
+ border: 1px solid #e9ecef;
+ border-radius: 5px;
+ background-color: #f8f9fa;
 }
 
 .subjectItem {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background-color: #e9ecef;
-    padding: 8px 12px;
-    border-radius: 5px;
+ display: flex; align-items: center;
+ gap: 10px;
+ background-color: #e9ecef;
+ padding: 8px 12px;
+ border-radius: 5px;
 }
 
 .subjectItem .checkbox {
-    margin: 0;
+ margin: 0;
 }
 
 .subjectItem .checkboxLabel {
-    flex-grow: 1;
-    margin: 0;
-    font-weight: normal;
-    color: #333;
+ flex-grow: 1;
+ margin: 0;
+ font-weight: normal;
+ color: #333;
 }
 
 .subjectItem .numQuestionsInput {
-    width: 60px;
-    padding: 5px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-    font-size: 0.9em;
+ width: 60px;
+ padding: 5px;
+ border-radius: 4px;
+ border: 1px solid #ccc;
+ font-size: 0.9em;
 }
 
 .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+ width: 100%;
+ border-collapse: collapse;
+ margin-top: 20px;
+ box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .tableHeaderRow {
-    background-color: #007bff;
-    color: white;
+ background-color: #007bff;
+ color: white;
 }
 
 .tableHeader, .tableCell {
-    padding: 12px 15px;
-    border: 1px solid #dee2e6;
-    text-align: left;
+ padding: 12px 15px;
+ border: 1px solid #dee2e6;
+ text-align: left;
 }
 
 .tableHeader {
-    font-weight: bold;
-    text-transform: uppercase;
-    font-size: 0.9em;
+ font-weight: bold;
+ text-transform: uppercase;
+ font-size: 0.9em;
 }
 
 .tableRow:nth-child(even) {
-    background-color: #f2f2f2;
+ background-color: #f2f2f2;
 }
 
 .tableRow:hover {
-    background-color: #e9ecef;
+ background-color: #e9ecef;
 }
 
 /* --- NEW PAYMENT SECTION STYLES --- */
 .paymentDetailsCard {
-    background-color: #e6f7ff; /* Light blue background for details */
-    border: 1px solid #a6e3ff;
-    border-radius: 8px;
-    padding: 25px;
-    margin-top: 20px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+ background-color: #e6f7ff; /* Light blue background for details */
+ border: 1px solid #a6e3ff;
+ border-radius: 8px;
+ padding: 25px;
+ margin-top: 20px;
+ box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
 }
 
 .paymentDetailsCard h3 {
-    color: #0056b3;
-    margin-top: 0;
-    margin-bottom: 20px;
-    font-size: 1.5em;
-    border-bottom: 1px solid #b3e0ff;
-    padding-bottom: 10px;
+ color: #0056b3;
+ margin-top: 0;
+ margin-bottom: 20px;
+ font-size: 1.5em;
+ border-bottom: 1px solid #b3e0ff;
+ padding-bottom: 10px;
 }
 
 .paymentDetailsCard p {
-    margin-bottom: 8px;
-    font-size: 1.05em;
-    color: #444;
+ margin-bottom: 8px;
+ font-size: 1.05em;
+ color: #444;
 }
 
 .paymentDetailsCard p strong {
-    min-width: 160px; /* Align labels */
-    display: inline-block;
-    color: #003366;
+ min-width: 160px; /* Align labels */
+ display: inline-block;
+ color: #003366;
 }
 
 .paymentStatus-pending { color: orange; font-weight: bold; }
@@ -240,237 +239,361 @@
 .paymentStatus-cancelled { color: gray; font-weight: bold; }
 
 .updateStatusButton {
-    background-color: #ffc107; /* Orange/Yellow for update */
-    color: #333 !important;
-    font-weight: bold;
-    margin-top: 25px;
+ background-color: #ffc107; /* Orange/Yellow for update */
+ color: #333 !important;
+ font-weight: bold;
+ margin-top: 25px;
 }
 .updateStatusButton:hover {
-    background-color: #e0a800;
+ background-color: #e0a800;
 }
 
 .printReceiptButton {
-    background-color: #17a2b8; /* Teal for print */
-    margin-top: 15px;
+ background-color: #17a2b8; /* Teal for print */
+ margin-top: 15px;
 }
 .printReceiptButton:hover {
-    background-color: #138496;
+ background-color: #138496;
 }
 
 /* Receipt container for printing (hidden by default on screen) */
 .receipt-container {
-    display: none; /* Hide by default */
-    /* Add print-specific styles within @media print below */
+ display: none; /* Hide by default */
+ /* Add print-specific styles within @media print below */
 }
 
 /* Content inside the receipt-container */
 .receipt-content {
-    padding: 20px;
-    background-color: #fff;
-    font-family: 'Times New Roman', serif;
-    color: #333;
-    line-height: 1.6;
-    max-width: 700px; /* Limit width for print */
-    margin: 0 auto;
+ padding: 20px;
+ background-color: #fff;
+ font-family: 'Times New Roman', serif;
+ color: #333;
+ line-height: 1.6;
+ max-width: 700px; /* Limit width for print */
+ margin: 0 auto;
 }
 
 /* Specific styles to apply only when printing the receipt */
 @media print {
-    /* Hide the entire dashboard UI except for the receipt container */
-    body > div:not(.receipt-container) {
-        display: none;
-    }
+ /* Hide the entire dashboard UI except for the receipt container */
+ body > div:not(.receipt-container) {
+ display: none;
+ }
 
-    /* Make the receipt container visible for printing */
-    .receipt-container {
-        display: block !important; /* Override display: none */
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        margin: 0;
-        padding: 0;
-        background-color: white;
-        z-index: 9999;
-    }
+ /* Make the receipt container visible for printing */
+ .receipt-container {
+ display: block !important; /* Override display: none */
+ position: fixed;
+ top: 0;
+ left: 0;
+ width: 100%;
+ height: 100%;
+ margin: 0;
+ padding: 0;
+ background-color: white;
+ z-index: 9999;
+ }
 
-    .no-print-receipt {
-        display: none !important; /* Hide buttons and other non-receipt elements */
-    }
+ .no-print-receipt {
+ display: none !important; /* Hide buttons and other non-receipt elements */
+ }
 
-    .receipt-content {
-        box-shadow: none !important;
-        border: none !important;
-        padding: 0 !important; /* Remove screen padding */
-    }
+ .receipt-content {
+ box-shadow: none !important;
+ border: none !important;
+ padding: 0 !important; /* Remove screen padding */
+ }
 }
 
 
 /* --- Filter Controls Styles --- */
 .filterControls {
-    display: flex;
-    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
-    gap: 15px; /* Spacing between filter items */
-    align-items: center;
-    margin-bottom: 20px;
+ display: flex;
+ flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+ gap: 15px; /* Spacing between filter items */
+ align-items: center;
+ margin-bottom: 20px;
 }
 
 .filterControls .label {
-    margin-bottom: 0; /* Align label with select */
-    min-width: 120px; /* Give labels a consistent width */
+ margin-bottom: 0; /* Align label with select */
+ min-width: 120px; /* Give labels a consistent width */
 }
 
 .filterControls .select.filterSelect {
-    flex: 1;
-    min-width: 150px; 
+ flex: 1;
+min-width: 150px; 
 }
 
 
 /* --- CARD STYLES FOR ADMIN DASHBOARD --- */
 
 .cardGrid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 24px;
-    margin-top: 24px;
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+ gap: 24px;
+ margin-top: 24px;
 }
 
 .adminCard {
-    background: #fff;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
-    padding: 28px 24px 20px 24px;
-    display: flex;
-    flex-direction: column;
-    transition: box-shadow 0.2s;
-    border: 1px solid #e3e6ea;
-    position: relative;
+ background: #fff;
+ border-radius: 12px;
+ box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+ padding: 28px 24px 20px 24px;
+ display: flex;
+ flex-direction: column;
+ transition: box-shadow 0.2s;
+ border: 1px solid #e3e6ea;
+ position: relative;
 }
 .adminCard:hover {
-    box-shadow: 0 6px 24px rgba(0,123,255,0.10);
-    border-color: #b3d7ff;
+ box-shadow: 0 6px 24px rgba(0,123,255,0.10);
+ border-color: #b3d7ff;
 }
 
 .adminCard .cardTitle {
-    font-size: 1.3em;
-    font-weight: bold;
-    color: #0056b3;
-    margin-bottom: 10px;
+ font-size: 1.3em;
+ font-weight: bold;
+ color: #0056b3;
+ margin-bottom: 10px;
 }
 .adminCard .cardMeta {
-    font-size: 0.98em;
-    color: #666;
-    margin-bottom: 8px;
+ font-size: 0.98em;
+ color: #666;
+ margin-bottom: 8px;
 }
 .adminCard .cardActions {
-    margin-top: 18px;
-    display: flex;
-    gap: 10px;
+ margin-top: 18px;
+ display: flex;
+ gap: 10px;
 }
 .adminCard .actionButton {
-    padding: 7px 16px;
-    border-radius: 5px;
-    border: none;
-    font-weight: 600;
-    font-size: 0.98em;
-    cursor: pointer;
-    transition: background 0.2s;
+ padding: 7px 16px;
+ border-radius: 5px;
+ border: none;
+ font-weight: 600;
+ font-size: 0.98em;
+ cursor: pointer;
+transition: background 0.2s;
 }
 .adminCard .edit {
-    background: #007bff;
-    color: #fff;
+background: #007bff;
+ color: #fff;
 }
 .adminCard .edit:hover {
-    background: #0056b3;
+ background: #0056b3;
 }
 .adminCard .delete {
-    background: #dc3545;
-    color: #fff;
+ background: #dc3545;
+ color: #fff;
 }
 .adminCard .delete:hover {
-    background: #b71c1c;
+ background: #b71c1c;
 }
 
 /* Card content details */
 .adminCard .cardDetail {
-    margin-bottom: 6px;
-    font-size: 1em;
-    color: #333;
+ margin-bottom: 6px;
+ font-size: 1em;
+ color: #333;
 }
 .adminCard .cardDetail strong {
-    color: #0056b3;
-    font-weight: 600;
-    margin-right: 6px;
+ color: #0056b3;
+ font-weight: 600;
+ margin-right: 6px;
 }
 
 /* Responsive adjustments for cards */
 @media (max-width: 900px) {
-    .cardGrid {
-        grid-template-columns: 1fr 1fr;
-    }
+ .cardGrid {
+ grid-template-columns: 1fr 1fr;
+ }
 }
 @media (max-width: 600px) {
-    .cardGrid {
-        grid-template-columns: 1fr;
-    }
-    .adminCard {
-        padding: 18px 10px 14px 10px;
-    }
+ .cardGrid {
+ grid-template-columns: 1fr;
+ }
+ .adminCard {
+ padding: 18px 10px 14px 10px;
+ }
 }
 
 /* Hide old table styles for main content (optional, for card-only view) */
 .table, .tableHeaderRow, .tableHeader, .tableCell, .tableRow {
-    display: none !important;
+ display: none !important;
 }
 
 /* --- Responsive Adjustments for overall dashboard --- */
 @media (max-width: 768px) {
-    .container {
-        padding: 15px;
-        margin: 15px auto;
-    }
-    .header {
-        font-size: 2em;
-    }
-    .sectionHeader {
-        font-size: 1.5em;
-    }
-    .form .input,
-    .form .textarea,
-    .form .select {
-        width: 100%; /* Full width on smaller screens */
-    }
-    .subjectGrid {
-        grid-template-columns: 1fr; /* Stack subjects on small screens */
-    }
-    .table {
-        font-size: 0.8em;
-    }
-    .tableHeader, .tableCell {
-        padding: 8px 10px;
-    }
-    .paymentDetailsCard p strong {
-        min-width: unset; 
-    }
-    .filterControls {
-        flex-direction: column; 
-        align-items: flex-start;
-    }
-    .filterControls .select.filterSelect {
-        width: 100%; 
-    }
+ .container {
+ padding: 15px;
+ margin: 15px auto;
+ }
+ .header {
+ font-size: 2em;
+ }
+ .sectionHeader {
+ font-size: 1.5em;
+ }
+ .form .input,
+ .form .textarea,
+ .form .select {
+ width: 100%; /* Full width on smaller screens */
+ }
+ .subjectGrid {
+ grid-template-columns: 1fr; /* Stack subjects on small screens */
+ }
+ .table {
+ font-size: 0.8em;
+ }
+ .tableHeader, .tableCell {
+ padding: 8px 10px;
+ }
+ .paymentDetailsCard p strong {
+ min-width: unset; 
+}
+.filterControls {
+ flex-direction: column; 
+ align-items: flex-start;
+}
+.filterControls .select.filterSelect {
+ width: 100%; 
+ }
 }
 
 @media (max-width: 480px) {
-    .header {
-        font-size: 1.8em;
-    }
-    .sectionHeader {
-        font-size: 1.3em;
-    }
-    .logoutButton, .form .submitButton {
-        font-size: 0.9em;
-        padding: 10px 15px;
-    }
+ .header {
+ font-size: 1.8em; }
+.sectionHeader {
+ font-size: 1.3em;
+ }
+ .logoutButton, .form .submitButton {
+ font-size: 0.9em;
+ padding: 10px 15px;
+ }
+}
+
+@media print {
+ /* Hide everything by default */
+body * {
+  visibility: hidden;
+ }
+
+ /* Show specific elements for printing */
+ .receipt-content-printable.show-for-print,
+ .receipt-content-printable.show-for-print *,
+ .statement-content-printable.show-for-print,
+ .statement-content-printable.show-for-print *,
+ .results-printable,
+ .results-printable * {
+  visibility: visible !important;
+ }
+
+ /* Position printable content at the top */
+ .receipt-content-printable,
+ .statement-content-printable,
+.results-printable {
+ position: absolute;
+ left: 0;
+ top: 0;
+ width: 100vw;
+ background: #fff;
+ z-index: 9999;
+  padding: 20px; /* Add some padding for printout */
+ }
+
+/* Specific styles for tables in print view */
+ .receipt-content-printable table,
+ .statement-content-printable table,.results-printable table {
+width: 100%;
+border-collapse: collapse;
+margin-top: 15px;
+font-size: 10px; /* Slightly smaller font for tables on print */
+}
+
+.receipt-content-printable th, .receipt-content-printable td,
+.statement-content-printable th, .statement-content-printable td,
+.results-printable th, .results-printable td {
+border: 1px solid #ccc;
+padding: 3px 6px; /* Adjusted padding for more condensed look */
+text-align: left;
+word-wrap: break-word; /* Ensure long text wraps */
+}
+
+.results-printable .subject-scores-pre {
+white-space: pre-wrap; /* Preserve whitespace and allow wrapping */
+font-family: inherit; /* Use default font for readability */
+font-size: inherit;
+ margin: 0;
+}
+
+/* Hide elements that should never print */
+.printButton,
+.resultsFilter,
+.header,
+.logoutButton,
+.sectionHeader,
+.sectionDescription,
+.form,
+.formGroup,
+.modal-overlay,
+.cardActions, /* Hide buttons in exam overview when printing */
+.actionButton,
+.updateStatusButton,
+.bank-details-info,
+.filteredPaymentsSection .printButton, /* Hide button if printing whole statement */
+.paymentDetailsCard button, /* Hide buttons in single payment card */
+.paginationControls, /* ⭐ NEW: Hide pagination controls for print */
+.download-buttons-group /* ⭐ NEW: Hide download buttons for print */
+{
+display: none !important;
+}
+}
+
+/* Basic styles for pagination controls (add to your AdminDashboard.css) */
+.paginationControls {
+display: flex;
+justify-content: center;
+align-items: center;
+margin-top: 20px;
+gap: 15px;
+font-size: 1.1em;
+color: #333;
+}
+
+.paginationButton {
+padding: 8px 15px;
+background-color: #007bff;
+color: white;
+border: none;
+border-radius: 5px;
+cursor: pointer;
+font-size: 1em;
+transition: background-color 0.3s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+background-color: #0056b3;
+}
+
+.paginationButton:disabled {
+background-color: #cccccc;
+cursor: not-allowed;
+}
+
+/* Styles for new download buttons */
+.download-buttons-group {display: flex;
+gap: 10px;
+margin-bottom: 1rem;
+flex-wrap: wrap; /* Allows buttons to wrap on smaller screens */
+}
+
+.download-buttons-group .downloadButton {
+background-color: #28a745; /* Green for download */
+border-color: #28a745;
+}
+
+.download-buttons-group .downloadButton:hover {
+background-color: #218838;
+border-color: #1e7e34;
 }
