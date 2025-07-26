@@ -41,13 +41,14 @@ const renderSectionDisplay = (value) => {
   }
   return safeValue;
 };
-
 // Function to transform raw results into the desired grouped format
 const groupResultsByStudentAndExam = (results) => {
   const grouped = {};
+
   results.forEach(result => {
+    // Ensure all necessary properties are present for grouping and display
     const studentId = renderSafeString(result.student_id || result.user?._id || result.user?.studentId);
-    const examId = renderSafeString(result.exam_id || result.exam?._id);
+    const examId = renderSafeString(result.exam?._id || result.exam_id); // Prioritize exam object's _id
 
     if (!studentId || !examId) {
       console.warn("Skipping result due to missing student or exam ID:", result);
@@ -66,38 +67,75 @@ const groupResultsByStudentAndExam = (results) => {
         dateTaken: result.date_taken ? new Date(result.date_taken).toLocaleDateString() : 'N/A',
         overallScore: 0,
         totalMaxScore: 0,
+        // subjectScores will hold the breakdown, but we now get it differently
         subjectScores: [],
       };
     }
 
-    // Accumulate scores for each subject
-    const score = typeof result.score === 'number' ? result.score : 0;
-    const maxScore = typeof result.total_questions === 'number' ? result.total_questions : 0;
-    const subjectName = renderSafeString(result.subject_name || result.subject?.subjectName);
+    // ⭐ CRITICAL MODIFICATION: Iterate over subject_scores_breakdown
+    // instead of trying to find subject info at the top level of `result`.
+    if (result.subject_scores_breakdown && Array.isArray(result.subject_scores_breakdown)) {
+      result.subject_scores_breakdown.forEach(subjectBreakdown => {
+        const score = typeof subjectBreakdown.score === 'number' ? subjectBreakdown.score : 0;
+        const maxScore = typeof subjectBreakdown.totalQuestionsInSubject === 'number' ? subjectBreakdown.totalQuestionsInSubject : 0;
+        const subjectName = renderSafeString(subjectBreakdown.subjectName);
 
-    grouped[key].overallScore += score;
-    grouped[key].totalMaxScore += maxScore;
-    grouped[key].subjectScores.push({
-      subjectName: subjectName,
-      score: score,
-      maxScore: maxScore,
-    });
+        // Accumulate overall scores from breakdown
+        grouped[key].overallScore += score;
+        grouped[key].totalMaxScore += maxScore;
+
+        // Add to the list of subject scores for this grouped entry
+        grouped[key].subjectScores.push({
+          subjectName: subjectName,
+          score: score,
+          maxScore: maxScore,
+        });
+      });
+    } else {
+      console.warn("Result missing 'subject_scores_breakdown' array:", result);
+      // Fallback for results without detailed breakdown, if any still exist
+      const score = typeof result.score === 'number' ? result.score : 0;
+      const maxScore = typeof result.total_questions === 'number' ? result.total_questions : 0;
+      const subjectName = renderSafeString(result.subject_name || 'N/A'); // Use N/A if subject_name is missing
+
+      grouped[key].overallScore += score;
+      grouped[key].totalMaxScore += maxScore;
+      grouped[key].subjectScores.push({
+        subjectName: subjectName,
+        score: score,
+        maxScore: maxScore,
+      });
+    }
   });
 
-  // Calculate percentage and format subject scores
+  // Calculate percentage and format subject scores for final output
   return Object.values(grouped).map(entry => {
     const percentage = entry.totalMaxScore > 0
       ? ((entry.overallScore / entry.totalMaxScore) * 100).toFixed(2) + '%'
       : '0.00%';
 
-    // Format subject scores into the desired string
-    entry.formattedSubjectScores = entry.subjectScores.map(sub =>
+    // Format subject scores into the desired string and explicitly add it to the entry
+    const formattedSubjectScores = entry.subjectScores.map(sub =>
       `${sub.subjectName}: ${sub.score}/${sub.maxScore}`
-    ).join('\n'); // Use newline for display in table cell
+    ).join('\n');
 
-    return { ...entry, percentage };
+    // Return a new object with the desired properties, including the formatted string
+    return {
+      studentId: entry.studentId,
+      fullName: entry.fullName,
+      classLevel: entry.classLevel,
+      section: entry.section,
+      department: entry.department,
+      examTitle: entry.examTitle,
+      dateTaken: entry.dateTaken,
+      overallScore: entry.overallScore,
+      totalMaxScore: entry.totalMaxScore,
+      percentage: percentage,
+      formattedSubjectScores: formattedSubjectScores,
+    };
   });
 };
+
 
 // --- END GLOBAL HELPER FUNCTIONS ---
 
