@@ -287,21 +287,25 @@ function AdminDashboard() {
       const resultsEndpoint = `/results${filterQueryString ? `?${filterQueryString}` : ''}`;
       console.log(`AdminDashboard: API Call: Fetching all results with endpoint: ${resultsEndpoint}`);
 
-      // ⭐ MODIFIED: Access the response directly as the data array
-      const fetchedResultsArray = await api.get(resultsEndpoint);
+      // ⭐ CRITICAL MODIFICATION: Access the 'data' property of the response object
+      const fetchedResultsResponse = await api.get(resultsEndpoint);
+      const resultsData = fetchedResultsResponse.data || []; // Ensure it's an array
 
-      // ⭐ MODIFIED: Use the fetched array directly, and calculate totalCount from its length
-      const resultsData = fetchedResultsArray || []; // Ensure it's an array, even if API returns null/undefined
-      const totalCount = resultsData.length;       // Total count is simply the length of the fetched array
+      // ⭐ If your backend *also* sends a totalCount property directly in the response object
+      // (e.g., { data: [...], totalCount: N }), you'd do:
+      // const totalCount = fetchedResultsResponse.totalCount || resultsData.length;
+      // BUT based on your previous network tab output, it's just the array.
+      // So, totalCount is the length of the *current page's* results.
+      const totalCount = resultsData.length;
 
-      console.log("Fetched Results Raw Data:", resultsData); // Add this for debugging
-      console.log("Total Results Count:", totalCount);     // Add this for debugging
+      console.log("Fetched Results Raw Data:", resultsData);
+      console.log("Total Results Count:", totalCount);
 
       setAllResults(resultsData); // Store the raw results for current page
       setTotalResultsCount(totalCount); // Store total count for pagination
 
       // Process results after fetching them (only the current page's results)
-      setProcessedResults(groupResultsByStudentAndExam(resultsData)); // Pass the correct array
+      setProcessedResults(groupResultsByStudentAndExam(resultsData)); // Pass the array
 
       console.log('AdminDashboard: API Call: Fetching all questions...');
       const fetchedQuestions = await getAllQuestions();
@@ -334,6 +338,7 @@ function AdminDashboard() {
     currentPage,
     resultsPerPage
   ]);
+
 
   useEffect(() => {
     if (authLoading) {
