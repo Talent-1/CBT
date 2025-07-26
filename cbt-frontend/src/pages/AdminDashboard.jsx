@@ -44,10 +44,18 @@ const renderSectionDisplay = (value) => {
 
 
 // Function to transform raw results into the desired grouped format
-const groupResultsByStudentAndExam = (results) => {
+export const groupResultsByStudentAndExam = (results) => {
+  if (!Array.isArray(results)) {
+    console.error("groupResultsByStudentAndExam expects an array but received:", results);
+    return [];
+  }
+
   const grouped = {};
+
   results.forEach(result => {
+    // Use the _id from the result or user for studentId, ensure it's a string
     const studentId = renderSafeString(result.student_id || result.user?._id || result.user?.studentId);
+    // Use the _id from the result or exam for examId, ensure it's a string
     const examId = renderSafeString(result.exam_id || result.exam?._id);
 
     if (!studentId || !examId) {
@@ -55,10 +63,11 @@ const groupResultsByStudentAndExam = (results) => {
       return;
     }
 
-    const key = `${studentId}-${examId}`; // Unique key for student + exam
+    const key = `${studentId}-${examId}`; // Unique key for student + exam combination
 
     if (!grouped[key]) {
       grouped[key] = {
+        _id: result._id, // Keep the original result ID for the row key if needed
         studentId: studentId,
         fullName: renderSafeString(result.student_name || result.user?.fullName),
         classLevel: renderSafeString(result.student_classLevel || result.user?.classLevel),
@@ -66,11 +75,38 @@ const groupResultsByStudentAndExam = (results) => {
         department: renderSafeString(result.student_department || result.user?.areaOfSpecialization || 'N/A'),
         examTitle: renderSafeString(result.exam_title || result.exam?.title),
         dateTaken: result.date_taken ? new Date(result.date_taken).toLocaleDateString() : 'N/A',
-        overallScore: 0,
-        totalMaxScore: 0,
-        subjectScores: [],
+        overallScore: result.score, // This is the total score for the exam from your API
+        totalMaxScore: result.total_questions, // This is the total questions for the exam from your API
+        // ⭐ CRITICAL CHANGE: Directly use subject_scores_breakdown from the API response
+        subject_scores_breakdown: result.subject_scores_breakdown || [],
+        formattedSubjectScores: '', // Initialize, will be populated next
       };
+
+      // ⭐ NEW LOGIC: Generate the formatted string from the subject_scores_breakdown
+      if (grouped[key].subject_scores_breakdown.length > 0) {
+        grouped[key].formattedSubjectScores = grouped[key].subject_scores_breakdown
+          .map(
+            (subScore) =>
+              `${subScore.subjectName}: ${subScore.score}/${subScore.totalQuestionsInSubject}`
+          )
+          .join('\n'); // Join with a newline for <pre> tag
+      } else {
+        grouped[key].formattedSubjectScores = 'N/A';
+      }
     }
+    // If you were truly "grouping" multiple attempts, you'd merge or aggregate here.
+    // However, your provided data seems to be one result per student-exam,
+    // so the first found result effectively "wins" for that key.
+  });
+
+  // Calculate percentage and return as an array
+  return Object.values(grouped).map(entry => {
+    const percentage = entry.totalMaxScore > 0
+      ? ((entry.overallScore / entry.totalMaxScore) * 100).toFixed(2) + '%'
+      : '0.00%';
+    return { ...entry, percentage };
+  });
+}
 
     // Accumulate scores for each subject
     const score = typeof result.score === 'number' ? result.score : 0;
@@ -1538,19 +1574,20 @@ function AdminDashboard() {
             </thead>
             <tbody>
               {processedResults.length > 0 ? (
-                processedResults.map((result, index) => (
-                  <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
-                    <td>{result.studentId}</td>
-                    <td>{result.fullName}</td>
-                    <td>{result.examTitle}</td>
-                    <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
-                    <td>{result.percentage}</td>
-                    <td>
-                      <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
-                    </td>
-                    <td>{result.dateTaken}</td>
-                  </tr>
-                ))
+                 processedResults.map((result, index) => (
+            <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
+                <td>{result.studentId}</td>
+                <td>{result.fullName}</td>
+                <td>{result.examTitle}</td>
+                <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
+                <td>{result.percentage}</td>
+                <td>
+                    {/* This will now display the formatted string */}
+                    <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
+                </td>
+                <td>{result.dateTaken}</td>
+            </tr>
+        ))
               ) : (
                 <tr>
                   <td colSpan="7">No results found for the selected filters.</td>
