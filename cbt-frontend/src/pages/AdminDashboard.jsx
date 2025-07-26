@@ -1518,21 +1518,23 @@ function AdminDashboard() {
             </thead>
             <tbody>
               {processedResults.length > 0 ? (
-                processedResults.map((result, index) => (
-                   console.log(`Result ${index}:`, result);
-      console.log(`formattedSubjectScores for Result ${index}:`, typeof result.formattedSubjectScores, result.formattedSubjectScores);
-                  <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
-                    <td>{result.studentId}</td>
-                    <td>{result.fullName}</td>
-                    <td>{result.examTitle}</td>
-                    <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
-                    <td>{result.percentage}</td>
-                    <td>
-                      <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
-                    </td>
-                    <td>{result.dateTaken}</td>
-                  </tr>
-                ))
+                processedResults.map((result, index) => { // <-- ADDED '{' here
+                  console.log(`Result ${index}:`, result);
+                  console.log(`formattedSubjectScores for Result ${index}:`, typeof result.formattedSubjectScores, result.formattedSubjectScores);
+                  return ( // <-- Explicit return for the JSX
+                    <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
+                      <td>{result.studentId}</td>
+                      <td>{result.fullName}</td>
+                      <td>{result.examTitle}</td>
+                      <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
+                      <td>{result.percentage}</td>
+                      <td>
+                        <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
+                      </td>
+                      <td>{result.dateTaken}</td>
+                    </tr>
+                  ); // <-- ADDED ')' and ';' here for the return statement
+                }) // <-- ADDED '}' here
               ) : (
                 <tr>
                   <td colSpan="7">No results found for the selected filters.</td>
