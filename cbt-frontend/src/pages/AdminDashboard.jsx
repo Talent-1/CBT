@@ -53,60 +53,61 @@ export const groupResultsByStudentAndExam = (results) => {
   const grouped = {};
 
   results.forEach(result => {
-    // Use the _id from the result or user for studentId, ensure it's a string
-    const studentId = renderSafeString(result.student_id || result.user?._id || result.user?.studentId);
-    // Use the _id from the result or exam for examId, ensure it's a string
+    // Ensure we have stable IDs for grouping and rendering
+    // Use student_id or user.studentId as primary, fallback to user._id if studentId not present
+    const studentId = renderSafeString(result.student_id || result.user?.studentId || result.user?._id);
+    // Use exam_id or exam._id as primary
     const examId = renderSafeString(result.exam_id || result.exam?._id);
 
-    if (!studentId || !examId) {
-      console.warn("Skipping result due to missing student or exam ID:", result);
-      return;
+    if (studentId === 'N/A' || examId === 'N/A') {
+      console.warn("Skipping result due to missing student or exam ID for grouping:", result);
+      return; // Skip this result if essential IDs are missing
     }
 
-    const key = `${studentId}-${examId}`; // Unique key for student + exam combination
+    const key = `${studentId}-${examId}`; // Unique key for each student-exam combination
 
     if (!grouped[key]) {
+      // Initialize if this is the first time we see this student-exam combination
       grouped[key] = {
         _id: result._id, // Keep the original result ID for the row key if needed
         studentId: studentId,
         fullName: renderSafeString(result.student_name || result.user?.fullName),
         classLevel: renderSafeString(result.student_classLevel || result.user?.classLevel),
         section: renderSectionDisplay(result.student_section || result.user?.section),
-        department: renderSafeString(result.student_department || result.user?.areaOfSpecialization || 'N/A'),
+        department: renderSafeString(result.student_department || result.user?.areaOfSpecialization),
         examTitle: renderSafeString(result.exam_title || result.exam?.title),
         dateTaken: result.date_taken ? new Date(result.date_taken).toLocaleDateString() : 'N/A',
         overallScore: result.score, // This is the total score for the exam from your API
         totalMaxScore: result.total_questions, // This is the total questions for the exam from your API
-        // ⭐ CRITICAL CHANGE: Directly use subject_scores_breakdown from the API response
+        // CRITICAL: Directly use subject_scores_breakdown from the API response
         subject_scores_breakdown: result.subject_scores_breakdown || [],
         formattedSubjectScores: '', // Initialize, will be populated next
       };
 
-      // ⭐ NEW LOGIC: Generate the formatted string from the subject_scores_breakdown
+      // NEW LOGIC: Generate the formatted string from the subject_scores_breakdown
       if (grouped[key].subject_scores_breakdown.length > 0) {
         grouped[key].formattedSubjectScores = grouped[key].subject_scores_breakdown
           .map(
             (subScore) =>
-              `${subScore.subjectName}: ${subScore.score}/${subScore.totalQuestionsInSubject}`
+              `${renderSafeString(subScore.subjectName)}: ${renderSafeString(subScore.score)}/${renderSafeString(subScore.totalQuestionsInSubject)}`
           )
           .join('\n'); // Join with a newline for <pre> tag
       } else {
         grouped[key].formattedSubjectScores = 'N/A';
       }
     }
-    // If you were truly "grouping" multiple attempts, you'd merge or aggregate here.
-    // However, your provided data seems to be one result per student-exam,
-    // so the first found result effectively "wins" for that key.
+    // No need to do anything here if you just want the first unique result per student-exam
+    // If you needed to aggregate multiple attempts, this logic would be different.
   });
 
-  // Calculate percentage and return as an array
+  // Calculate percentage for all entries after grouping
   return Object.values(grouped).map(entry => {
     const percentage = entry.totalMaxScore > 0
       ? ((entry.overallScore / entry.totalMaxScore) * 100).toFixed(2) + '%'
       : '0.00%';
     return { ...entry, percentage };
   });
-}
+};
 
     // Accumulate scores for each subject
     const score = typeof result.score === 'number' ? result.score : 0;
