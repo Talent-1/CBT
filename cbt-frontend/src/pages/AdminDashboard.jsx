@@ -1,4 +1,4 @@
-// cbt-frontend/src/pages/AdminDashboard.jsx (CORRECTED CODE)
+// cbt-frontend/src/pages/AdminDashboard.jsx
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
@@ -42,72 +42,33 @@ const renderSectionDisplay = (value) => {
   return safeValue;
 };
 
-
 // Function to transform raw results into the desired grouped format
-export const groupResultsByStudentAndExam = (results) => {
-  if (!Array.isArray(results)) {
-    console.error("groupResultsByStudentAndExam expects an array but received:", results);
-    return [];
-  }
-
+const groupResultsByStudentAndExam = (results) => {
   const grouped = {};
-
   results.forEach(result => {
-    // Ensure we have stable IDs for grouping and rendering
-    // Use student_id or user.studentId as primary, fallback to user._id if studentId not present
-    const studentId = renderSafeString(result.student_id || result.user?.studentId || result.user?._id);
-    // Use exam_id or exam._id as primary
+    const studentId = renderSafeString(result.student_id || result.user?._id || result.user?.studentId);
     const examId = renderSafeString(result.exam_id || result.exam?._id);
 
-    if (studentId === 'N/A' || examId === 'N/A') {
-      console.warn("Skipping result due to missing student or exam ID for grouping:", result);
-      return; // Skip this result if essential IDs are missing
+    if (!studentId || !examId) {
+      console.warn("Skipping result due to missing student or exam ID:", result);
+      return;
     }
 
-    const key = `${studentId}-${examId}`; // Unique key for each student-exam combination
-
+    const key = `${studentId}-${examId}`; // Unique key for student + exam
     if (!grouped[key]) {
-      // Initialize if this is the first time we see this student-exam combination
       grouped[key] = {
-        _id: result._id, // Keep the original result ID for the row key if needed
         studentId: studentId,
         fullName: renderSafeString(result.student_name || result.user?.fullName),
         classLevel: renderSafeString(result.student_classLevel || result.user?.classLevel),
         section: renderSectionDisplay(result.student_section || result.user?.section),
-        department: renderSafeString(result.student_department || result.user?.areaOfSpecialization),
+        department: renderSafeString(result.student_department || result.user?.areaOfSpecialization || 'N/A'),
         examTitle: renderSafeString(result.exam_title || result.exam?.title),
         dateTaken: result.date_taken ? new Date(result.date_taken).toLocaleDateString() : 'N/A',
-        overallScore: result.score, // This is the total score for the exam from your API
-        totalMaxScore: result.total_questions, // This is the total questions for the exam from your API
-        // CRITICAL: Directly use subject_scores_breakdown from the API response
-        subject_scores_breakdown: result.subject_scores_breakdown || [],
-        formattedSubjectScores: '', // Initialize, will be populated next
+        overallScore: 0,
+        totalMaxScore: 0,
+        subjectScores: [],
       };
-
-      // NEW LOGIC: Generate the formatted string from the subject_scores_breakdown
-      if (grouped[key].subject_scores_breakdown.length > 0) {
-        grouped[key].formattedSubjectScores = grouped[key].subject_scores_breakdown
-          .map(
-            (subScore) =>
-              `${renderSafeString(subScore.subjectName)}: ${renderSafeString(subScore.score)}/${renderSafeString(subScore.totalQuestionsInSubject)}`
-          )
-          .join('\n'); // Join with a newline for <pre> tag
-      } else {
-        grouped[key].formattedSubjectScores = 'N/A';
-      }
     }
-    // No need to do anything here if you just want the first unique result per student-exam
-    // If you needed to aggregate multiple attempts, this logic would be different.
-  });
-
-  // Calculate percentage for all entries after grouping
-  return Object.values(grouped).map(entry => {
-    const percentage = entry.totalMaxScore > 0
-      ? ((entry.overallScore / entry.totalMaxScore) * 100).toFixed(2) + '%'
-      : '0.00%';
-    return { ...entry, percentage };
-  });
-};
 
     // Accumulate scores for each subject
     const score = typeof result.score === 'number' ? result.score : 0;
@@ -177,7 +138,6 @@ const getUniqueSectionsForClassLevel = (users, classLevel) => {
   }).sort();
 };
 
-
 // Helper to get unique departments (areaOfSpecialization) for a given class level from users
 const getUniqueDepartmentsForClassLevel = (users, classLevel) => {
   const departments = new Set();
@@ -194,7 +154,6 @@ const getUniqueDepartmentsForClassLevel = (users, classLevel) => {
 function AdminDashboard() {
   const navigate = useNavigate();
   const { user: authUser, loading: authLoading, logout } = useAuth();
-
   const [branches, setBranches] = useState([]);
   const [exams, setExams] = useState([]);
   const [allResults, setAllResults] = useState([]); // This state will now hold the raw transformed results
@@ -228,7 +187,6 @@ function AdminDashboard() {
   const [selectedDateTaken, setSelectedDateTaken] = useState(''); // Format: YYYY-MM-DD
   // ⭐ NEW: State for Student ID filter
   const [studentIdFilter, setStudentIdFilter] = useState('');
-
   const [availableResultsSubClassLevels, setAvailableResultsSubClassLevels] = useState([]); // Sections available for results filter
   const [availableResultsDepartments, setAvailableResultsDepartments] = useState([]); // Departments available for results filter
   // --- END NEWLY ADDED STATE VARIABLES ---
@@ -245,7 +203,6 @@ function AdminDashboard() {
   const [updatePaymentLoading, setUpdatePaymentLoading] = useState(false);
   const [updatePaymentError, setUpdatePaymentError] = useState('');
   const [updatePaymentFeedback, setUpdatePaymentFeedback] = useState('');
-
   const receiptRef = useRef(); // For single payment receipt
   const statementRef = useRef(); // For payment statement
 
@@ -334,10 +291,8 @@ function AdminDashboard() {
       // BUT based on your previous network tab output, it's just the array.
       // So, totalCount is the length of the *current page's* results.
       const totalCount = resultsData.length;
-
       console.log("Fetched Results Raw Data:", resultsData);
       console.log("Total Results Count:", totalCount);
-
       setAllResults(resultsData); // Store the raw results for current page
       setTotalResultsCount(totalCount); // Store total count for pagination
 
@@ -376,20 +331,17 @@ function AdminDashboard() {
     resultsPerPage
   ]);
 
-
   useEffect(() => {
     if (authLoading) {
       console.log('AdminDashboard: Auth still loading, waiting...');
       return;
     }
-
     if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'branch_admin')) {
       console.log(`AdminDashboard: Access Denied for user role: ${authUser ? authUser.role : 'null'}. Redirecting.`);
       setError('Access Denied. You must be an administrator or branch administrator to view this page.');
       setTimeout(() => navigate('/login'), 2000);
       return;
     }
-
     console.log('AdminDashboard: User authorized. Starting data fetch.');
     fetchData();
   }, [authUser, authLoading, navigate, fetchData]);
@@ -422,7 +374,6 @@ function AdminDashboard() {
     setCurrentPage(1);
   }, [selectedResultsClassLevel, allUsers]);
 
-
   // NEW: Effect to update available sub-class levels for PAYMENT SEARCH when a main class level is selected
   useEffect(() => {
     if (selectedPaymentSearchClassLevel && allUsers.length > 0) {
@@ -448,12 +399,10 @@ function AdminDashboard() {
     e.preventDefault();
     setError('');
     setFeedbackMessage('');
-
     if (!authUser || authUser.role !== 'admin') {
       setError('Unauthorized: Only Super Administrators can add questions.');
       return;
     }
-
     if (!newQuestion.questionText || !newQuestion.correctOption ||
       !newQuestion.optionA || !newQuestion.optionB || !newQuestion.optionC || !newQuestion.optionD ||
       !newQuestion.subject || !newQuestion.classLevel) {
@@ -465,10 +414,8 @@ function AdminDashboard() {
       { text: newQuestion.optionA }, { text: newQuestion.optionB },
       { text: newQuestion.optionC }, { text: newQuestion.optionD },
     ];
-
     const correctOptionMapping = { 'A': 0, 'B': 1, 'C': 2, 'D': 3 };
     const correctOptionIndex = correctOptionMapping[newQuestion.correctOption.toUpperCase()];
-
     if (correctOptionIndex === undefined) {
       setError('Invalid correct option. Please use A, B, C, or D.');
       return;
@@ -547,17 +494,14 @@ function AdminDashboard() {
     e.preventDefault();
     setError('');
     setFeedbackMessage('');
-
     if (!authUser || authUser.role !== 'admin') {
       setError('Unauthorized: Only Super Administrators can add exams.');
       return;
     }
-
     if (!newExam.title || !newExam.classLevel || !newExam.duration || !newExam.branchId) {
       setError('Please fill all required fields for the exam (Title, Class Level, Duration, Branch).');
       return;
     }
-
     // NEW: If senior secondary class, ensure department is selected
     if (isSeniorSecondaryClass(newExam.classLevel) && !newExam.areaOfSpecialization) {
       setError('For Senior Secondary class levels, please select a Department for the exam.');
@@ -591,7 +535,6 @@ function AdminDashboard() {
         areaOfSpecialization: isSeniorSecondaryClass(newExam.classLevel) ? newExam.areaOfSpecialization : null,
         isActive: newExam.isActive, // ⭐ NEW: Include isActive in the payload
       };
-
       console.log('API Call: Adding new Unit Exam...', examDataToSend);
       await addExam(examDataToSend);
       setFeedbackMessage('Unit Exam added successfully!');
@@ -732,6 +675,7 @@ function AdminDashboard() {
       await deleteExam(examId);
       setExams(prev => prev.filter(e => e._id !== examId));
       setFeedbackMessage('Exam deleted successfully.');
+      // If the deleted exam was the one being edited, close the modal
       if (examToEdit && examToEdit._id === examId) closeEditExamModal();
     } catch (err) {
       setError(err.toString());
@@ -746,7 +690,6 @@ function AdminDashboard() {
     }
     const newStatus = !currentStatus;
     if (!window.confirm(`Are you sure you want to ${newStatus ? 'ACTIVATE' : 'DEACTIVATE'} this exam?`)) return;
-
     setError('');
     setFeedbackMessage('');
     try {
@@ -770,6 +713,7 @@ function AdminDashboard() {
       await deleteQuestion(questionId);
       setAllQuestions(prev => prev.filter(q => q._id !== questionId));
       setFeedbackMessage('Question deleted successfully.');
+      // If the deleted question was the one being edited, close the modal
       if (questionToEdit && questionToEdit._id === questionId) closeEditQuestionModal();
     } catch (err) {
       setError(err.toString());
@@ -907,7 +851,6 @@ function AdminDashboard() {
     setCurrentPage(prev => Math.min(totalPages, prev + 1));
   };
 
-
   // Render loading states first
   if (authLoading || dataLoading) {
     return (
@@ -919,6 +862,7 @@ function AdminDashboard() {
     );
   }
 
+  // Access check after loading is complete
   if (!authUser || (authUser.role !== 'admin' && authUser.role !== 'branch_admin')) {
     return <p className="errorMessage">Access Denied. You must be an administrator or branch administrator to view this page. <Link to="/login">Login</Link></p>;
   }
@@ -1291,7 +1235,7 @@ function AdminDashboard() {
                       <td>{renderSectionDisplay(payment.subClassLevel)}</td>
                       <td>{renderSafeString(payment.branch?.name)}</td>
                       <td>{payment.amount.toLocaleString()}</td>
-                      <td>{renderSafeString(payment.description)}</td>
+                      <td className="description-cell">{renderSafeString(payment.description)}</td> {/* Added class for potential styling */}
                       <td className={`payment-status ${payment.status}`}>{payment.status.toUpperCase()}</td>
                       <td>{new Date(payment.paymentDate).toLocaleDateString()}</td>
                       <td>{renderSafeString(payment.transactionRef)}</td>
@@ -1558,7 +1502,6 @@ function AdminDashboard() {
             />
           </div>
         </div>
-
         <button className="submitButton printButton" onClick={() => window.print()} style={{ marginBottom: '1rem' }}>Print Results (Current Page)</button>
         <div className="tableContainer results-printable">
           <table>
@@ -1575,20 +1518,19 @@ function AdminDashboard() {
             </thead>
             <tbody>
               {processedResults.length > 0 ? (
-                 processedResults.map((result, index) => (
-            <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
-                <td>{result.studentId}</td>
-                <td>{result.fullName}</td>
-                <td>{result.examTitle}</td>
-                <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
-                <td>{result.percentage}</td>
-                <td>
-                    {/* This will now display the formatted string */}
-                    <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
-                </td>
-                <td>{result.dateTaken}</td>
-            </tr>
-        ))
+                processedResults.map((result, index) => (
+                  <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
+                    <td>{result.studentId}</td>
+                    <td>{result.fullName}</td>
+                    <td>{result.examTitle}</td>
+                    <td>{`${result.overallScore} / ${result.totalMaxScore}`}</td>
+                    <td>{result.percentage}</td>
+                    <td>
+                      <pre className="subject-scores-pre">{result.formattedSubjectScores}</pre>
+                    </td>
+                    <td>{result.dateTaken}</td>
+                  </tr>
+                ))
               ) : (
                 <tr>
                   <td colSpan="7">No results found for the selected filters.</td>
@@ -1597,7 +1539,6 @@ function AdminDashboard() {
             </tbody>
           </table>
         </div>
-
         {/* ⭐ NEW: Pagination Controls */}
         {totalResultsCount > 0 && (
           <div className="paginationControls">
@@ -1612,7 +1553,6 @@ function AdminDashboard() {
 }
 
 export default AdminDashboard;
-
 /* PRINT STYLES - Adjusted for new results table and added general print hiding */
 <style>{`
 @media print {
