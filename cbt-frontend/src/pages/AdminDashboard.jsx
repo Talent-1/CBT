@@ -1519,6 +1519,8 @@ function AdminDashboard() {
             <tbody>
               {processedResults.length > 0 ? (
                 processedResults.map((result, index) => (
+                   console.log(`Result ${index}:`, result);
+      console.log(`formattedSubjectScores for Result ${index}:`, typeof result.formattedSubjectScores, result.formattedSubjectScores);
                   <tr key={`${result.studentId}-${result.examTitle}-${index}`}> {/* Unique key */}
                     <td>{result.studentId}</td>
                     <td>{result.fullName}</td>
