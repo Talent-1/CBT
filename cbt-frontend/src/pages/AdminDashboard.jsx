@@ -262,45 +262,46 @@ function AdminDashboard() {
 
       console.log('AdminDashboard: API Call: Fetching all users...');
       const fetchedUsers = await getAllUsers();
-      setAllUsers(fetchedUsers); // Set all users for deriving class/section/department filters
+      setAllUsers(fetchedUsers);
 
-      // Dynamically build filter query for results based on selected dropdowns and new filters
       const resultsFilterParams = new URLSearchParams();
       if (selectedResultsClassLevel) {
         resultsFilterParams.append('classLevel', selectedResultsClassLevel);
       }
       if (selectedResultsSubClassLevel) {
-        // ⭐ MODIFIED: Ensure 'Junior' or 'Senior' is correctly passed if your backend expects it.
-        // Assuming your backend stores 'Junior'/'Senior' as direct values in `section`.
         resultsFilterParams.append('section', selectedResultsSubClassLevel);
       }
-      // NEW: Add department filter if selected and class is senior secondary
       if (isSeniorSecondaryClass(selectedResultsClassLevel) && selectedResultsDepartment) {
         resultsFilterParams.append('areaOfSpecialization', selectedResultsDepartment);
       }
-      // ⭐ NEW: Add Date Taken filter
       if (selectedDateTaken) {
-        resultsFilterParams.append('dateTaken', selectedDateTaken); // Backend needs to interpret this for filtering
+        resultsFilterParams.append('dateTaken', selectedDateTaken);
       }
-      // ⭐ NEW: Add Student ID filter
       if (studentIdFilter.trim()) {
-        resultsFilterParams.append('studentId', studentIdFilter.trim()); // Backend needs to interpret this for filtering
+        resultsFilterParams.append('studentId', studentIdFilter.trim());
       }
-      // ⭐ NEW: Add Pagination parameters
       resultsFilterParams.append('page', currentPage);
       resultsFilterParams.append('limit', resultsPerPage);
-
 
       const filterQueryString = resultsFilterParams.toString();
       const resultsEndpoint = `/results${filterQueryString ? `?${filterQueryString}` : ''}`;
       console.log(`AdminDashboard: API Call: Fetching all results with endpoint: ${resultsEndpoint}`);
-      const fetchedResultsResponse = await api.get(resultsEndpoint); // Assuming response contains data and total count
 
-      // ⭐ MODIFIED: Extract data and total count from response
-      setAllResults(fetchedResultsResponse.data.results); // Store the raw results for current page
-      setTotalResultsCount(fetchedResultsResponse.data.totalCount); // Store total count for pagination
-      // ⭐ MODIFIED: Process results after fetching them (only the current page's results)
-      setProcessedResults(groupResultsByStudentAndExam(fetchedResultsResponse.data.results));
+      // ⭐ MODIFIED: Access the response directly as the data array
+      const fetchedResultsArray = await api.get(resultsEndpoint);
+
+      // ⭐ MODIFIED: Use the fetched array directly, and calculate totalCount from its length
+      const resultsData = fetchedResultsArray || []; // Ensure it's an array, even if API returns null/undefined
+      const totalCount = resultsData.length;       // Total count is simply the length of the fetched array
+
+      console.log("Fetched Results Raw Data:", resultsData); // Add this for debugging
+      console.log("Total Results Count:", totalCount);     // Add this for debugging
+
+      setAllResults(resultsData); // Store the raw results for current page
+      setTotalResultsCount(totalCount); // Store total count for pagination
+
+      // Process results after fetching them (only the current page's results)
+      setProcessedResults(groupResultsByStudentAndExam(resultsData)); // Pass the correct array
 
       console.log('AdminDashboard: API Call: Fetching all questions...');
       const fetchedQuestions = await getAllQuestions();
@@ -328,10 +329,10 @@ function AdminDashboard() {
     selectedResultsClassLevel,
     selectedResultsSubClassLevel,
     selectedResultsDepartment,
-    selectedDateTaken, // ⭐ NEW: Dependency
-    studentIdFilter,    // ⭐ NEW: Dependency
-    currentPage,        // ⭐ NEW: Dependency
-    resultsPerPage      // ⭐ NEW: Dependency
+    selectedDateTaken,
+    studentIdFilter,
+    currentPage,
+    resultsPerPage
   ]);
 
   useEffect(() => {
