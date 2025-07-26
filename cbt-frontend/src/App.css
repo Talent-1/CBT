@@ -417,7 +417,7 @@ p {
 
 /* --- Global Background Image (from your index.css, moved here for clarity with app styles) --- */
 html {
-    background-image: url('/image_ee81aa.jpg'); /* Using your provided background image */
+    background-image: url('/school-logos.jpg'); /* Using your provided background image */
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* Keeps background fixed when scrolling */
